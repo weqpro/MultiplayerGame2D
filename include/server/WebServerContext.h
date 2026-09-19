@@ -19,7 +19,7 @@ public:
     void handleEvents(uint32_t timeout);
 
 private:
-    ENetHostPtr host_;
+    shared::ENetHostPtr host_;
     ENetAddress addr_;
 };
 

@@ -10,7 +10,7 @@ WebServerContext::WebServerContext(uint16_t port, size_t peerCount) {
     addr_.host = ENET_HOST_ANY;
     addr_.port = port;
 
-    host_ = make_enet_host(&addr_, peerCount, 2);
+    host_ = shared::make_enet_host(&addr_, peerCount, 2);
 }
 
 void WebServerContext::handleEvents(uint32_t timeout) {
@@ -32,7 +32,7 @@ void WebServerContext::handleEvents(uint32_t timeout) {
         }
 
         case ENET_EVENT_TYPE_RECEIVE: {
-            ENetPacketPtr packet(event.packet);
+            shared::ENetPacketPtr packet(event.packet);
 
             auto* session = static_cast<PeerSession*>(event.peer->data);
             std::string_view payload(reinterpret_cast<const char*>(packet->data), packet->dataLength);

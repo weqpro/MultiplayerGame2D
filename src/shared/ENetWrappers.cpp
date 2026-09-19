@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace server {
+namespace shared {
 
 void ENetHostDeleter::operator()(ENetHost* host) const noexcept {
     if (host) {

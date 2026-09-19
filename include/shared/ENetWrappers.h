@@ -4,7 +4,7 @@
 #include <enet/enet.h>
 #include <memory>
 
-namespace server {
+namespace shared {
 
 // ENetHost *
 struct ENetHostDeleter {

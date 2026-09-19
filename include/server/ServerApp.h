@@ -7,18 +7,17 @@
 
 namespace server {
 
-
 class ServerApp {
 public:
-    ServerApp(uint16_t port, size_t peerCount) : server_(port, peerCount) {}
+    ServerApp(uint16_t port, size_t peerCount) : client_(port, peerCount) {}
 
     void GameLoop() {
         while (1) {
-            server_.handleEvents(1000);
+            client_.handleEvents(1000);
         }
     }
 private:
-    WebServerContext server_;
+    WebServerContext client_;
 };
 
 }
