@@ -1,4 +1,4 @@
-#ifndef WEB_CONTEXT__H_
+#ifndef WEB_SERVER_CONTEXT__H_
 
 #include <string>
 
@@ -25,4 +25,4 @@ private:
 
 }
 
-#endif // !WEB_CONTEXT__H_
+#endif // !WEB_SERVER_CONTEXT__H_

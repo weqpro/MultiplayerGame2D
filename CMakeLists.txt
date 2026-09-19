@@ -51,7 +51,8 @@ target_link_libraries(GameShared PUBLIC enet)
 # 2. Client Executable
 # -----------------------------------------------------------------------------
 add_executable(MultiplayerGame2D_Client
-  src/client/WebClientApp.cpp
+  src/client/ClientApp.cpp
+  src/client/WebClientContext.cpp
   src/client/main.cpp
 )
 
@@ -61,7 +62,8 @@ target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads
 # 3. Server Executable
 # -----------------------------------------------------------------------------
 add_executable(MultiplayerGame2D_Server
-  src/client/WebServerApp.cpp
+  src/server/ServerApp.cpp
+  src/server/WebServerContext.cpp
   src/server/main.cpp
 )
 

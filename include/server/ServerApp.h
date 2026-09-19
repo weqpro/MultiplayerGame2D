@@ -13,7 +13,9 @@ public:
     ServerApp(uint16_t port, size_t peerCount) : server_(port, peerCount) {}
 
     void GameLoop() {
-        server_.handleEvents(1000);
+        while (1) {
+            server_.handleEvents(1000);
+        }
     }
 private:
     WebServerContext server_;
