@@ -13,15 +13,19 @@ namespace server {
 
 /**
  * @brief Server application: accepts peers and services their traffic on a
- *        fixed-rate loop.
+ *        fixed-timestep loop.
  *
  * Built on shared::AppBase, which owns the WebServerContext, the loop and the
- * tick timing. This class supplies the lifecycle hooks and the ENet handler
- * callbacks.
+ * timing. This class supplies the lifecycle hooks and the ENet handler
+ * callbacks. It defines no @c onFixedUpdate yet; add one to run the
+ * authoritative simulation.
  *
  * @code
  * server::ServerApp app(1234, 32);
- * app.run(20);
+ * shared::LoopConfig cfg;
+ * cfg.fixedHz = 20;  // simulation steps per second
+ * cfg.frameHz = 20;  // headless: one loop iteration per step
+ * app.run(cfg);
  * @endcode
  */
 class ServerApp : public shared::AppBase<ServerApp, WebServerContext> {
@@ -80,7 +84,7 @@ private:
      * @brief Milliseconds each poll may block inside @c enet_host_service().
      *
      * A small non-zero value keeps an idle server from spinning on the CPU
-     * without meaningfully delaying the tick.
+     * without meaningfully delaying the frame.
      */
     uint32_t serviceTimeout() const { return 1; }
 

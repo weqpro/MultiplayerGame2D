@@ -13,7 +13,7 @@ namespace {
 
 constexpr uint16_t kDefaultPort = 1234;  ///< Port used when none is given.
 constexpr size_t kDefaultPeers = 32;     ///< Peer capacity used when none is given.
-constexpr uint32_t kDefaultTPS = 20;     ///< Tick rate used when none is given.
+constexpr uint32_t kDefaultTPS = 20;     ///< Fixed-step rate used when none is given.
 
 /**
  * @brief Parses a decimal integer from a command-line argument.
@@ -61,7 +61,7 @@ void printUsage(const char* program) {
     std::cerr << "Usage: " << program << " [port] [peers] [tps]\n"
               << "  port   Port to listen on (default " << kDefaultPort << ")\n"
               << "  peers  Maximum simultaneous peers (default " << kDefaultPeers << ")\n"
-              << "  tps    Target ticks per second (default " << kDefaultTPS << ")\n";
+              << "  tps    Fixed simulation steps per second (default " << kDefaultTPS << ")\n";
 }
 
 } // namespace
@@ -107,8 +107,14 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    // Headless: pace one frame per fixed step so each iteration pumps the
+    // network and then runs (typically) exactly one simulation step.
+    shared::LoopConfig cfg;
+    cfg.fixedHz = tps;
+    cfg.frameHz = tps;
+
     server::ServerApp app(port, peers);
-    app.run(tps);
+    app.run(cfg);
 
     return EXIT_SUCCESS;
 }

@@ -13,7 +13,8 @@ namespace {
 
 constexpr const char* kDefaultHost = "127.0.0.1"; ///< Host used when none is given.
 constexpr uint16_t kDefaultPort = 1234;           ///< Port used when none is given.
-constexpr uint32_t kDefaultTPS = 60;              ///< Tick rate used when none is given.
+constexpr uint32_t kDefaultTPS = 60;              ///< Fixed-step rate used when none is given.
+constexpr uint32_t kDefaultFPS = 120;             ///< Frame rate used when none is given.
 constexpr size_t kPeerCount = 1;                  ///< A client needs one outgoing connection.
 
 /**
@@ -56,10 +57,11 @@ private:
 
 /** @brief Prints usage to stderr. */
 void printUsage(const char* program) {
-    std::cerr << "Usage: " << program << " [host] [port] [tps]\n"
+    std::cerr << "Usage: " << program << " [host] [port] [tps] [fps]\n"
               << "  host  Server host name or address (default " << kDefaultHost << ")\n"
               << "  port  Server port (default " << kDefaultPort << ")\n"
-              << "  tps   Target ticks per second (default " << kDefaultTPS << ")\n";
+              << "  tps   Fixed simulation steps per second (default " << kDefaultTPS << ")\n"
+              << "  fps   Frames per second (default " << kDefaultFPS << ")\n";
 }
 
 } // namespace
@@ -76,8 +78,9 @@ int main(int argc, char** argv) {
     std::string host = kDefaultHost;
     uint16_t port = kDefaultPort;
     uint32_t tps = kDefaultTPS;
+    uint32_t fps = kDefaultFPS;
 
-    if (argc > 4) {
+    if (argc > 5) {
         printUsage(argv[0]);
         return EXIT_FAILURE;
     }
@@ -94,6 +97,12 @@ int main(int argc, char** argv) {
         printUsage(argv[0]);
         return EXIT_FAILURE;
     }
+    // A headless client has no vsync to pace it, so the loop must.
+    if (argc > 4 && (!parseArg(argv[4], fps) || fps == 0)) {
+        std::cerr << "Invalid frame rate: " << argv[4] << '\n';
+        printUsage(argv[0]);
+        return EXIT_FAILURE;
+    }
 
     const ENetGuard enet;
     if (!enet) {
@@ -101,8 +110,12 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    shared::LoopConfig cfg;
+    cfg.fixedHz = tps;
+    cfg.frameHz = fps;
+
     client::ClientApp app(std::move(host), port, kPeerCount);
-    app.run(tps);
+    app.run(cfg);
 
     return EXIT_SUCCESS;
 }

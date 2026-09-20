@@ -13,15 +13,18 @@ namespace client {
 
 /**
  * @brief Client application: connects to a single server and drives a
- *        fixed-rate tick loop.
+ *        fixed-timestep loop with a variable-rate frame on top.
  *
  * Built on shared::AppBase, which owns the WebClientContext, the loop and the
- * tick timing. This class supplies the lifecycle hooks and the ENet handler
+ * timing. This class supplies the lifecycle hooks and the ENet handler
  * callbacks.
  *
  * @code
  * client::ClientApp app(1234);
- * app.run(60);
+ * shared::LoopConfig cfg;
+ * cfg.fixedHz = 60;   // simulation steps per second
+ * cfg.frameHz = 120;  // headless: loop paces itself
+ * app.run(cfg);
  * @endcode
  */
 class ClientApp : public shared::AppBase<ClientApp, WebClientContext> {
@@ -86,10 +89,20 @@ private:
     bool onStartUp();
 
     /**
-     * @brief Sends one payload per tick once the connection is up.
-     * @param tick Zero-based index of the current tick.
+     * @brief Sends one payload per fixed step once the connection is up.
+     * @param tick Zero-based index of the current fixed step.
      */
-    void onTick(uint64_t tick);
+    void onFixedUpdate(uint64_t tick);
+
+    /**
+     * @brief Prints loop statistics once per second.
+     *
+     * Headless stand-in for an on-screen HUD: frames/s, fixed steps/s, the
+     * current interpolation factor and total clamped-away time.
+     *
+     * @param frameDelta Real time consumed by this frame, after clamping.
+     */
+    void onUpdate(Duration frameDelta);
 
     /**
      * @brief Closes the connection gracefully, draining the handshake.
@@ -101,6 +114,10 @@ private:
     std::string hostName_;      ///< Server host name or address.
     uint16_t port_;             ///< Server port.
     ENetPeer* peer_{nullptr};   ///< Server peer; null when not connected.
+
+    Duration statsElapsed_{Duration::zero()}; ///< Time since the last stats line.
+    uint64_t statsFrame_{0};                  ///< frameCount() at the last stats line.
+    uint64_t statsTick_{0};                   ///< tickCount() at the last stats line.
 };
 
 } // namespace client

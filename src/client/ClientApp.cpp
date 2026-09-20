@@ -1,5 +1,6 @@
 #include "client/ClientApp.h"
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -12,6 +13,9 @@ constexpr uint32_t kShutdownDrainStepMs = 50;
 
 /** @brief Maximum drain iterations to wait for the disconnect acknowledgement. */
 constexpr int kShutdownDrainSteps = 20;
+
+/** @brief Interval between loop statistics lines. */
+constexpr auto kStatsInterval = std::chrono::seconds(1);
 
 } // namespace
 
@@ -34,13 +38,33 @@ bool ClientApp::onStartUp() {
     return true;
 }
 
-void ClientApp::onTick(uint64_t tick) {
+void ClientApp::onFixedUpdate(uint64_t tick) {
     if (!peer_ || peer_->state != ENET_PEER_STATE_CONNECTED) {
         return; // Still handshaking; onDisconnect() handles the failure case.
     }
 
     const std::string payload = "Tick: " + std::to_string(tick);
     context_.send(peer_, payload, 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+}
+
+void ClientApp::onUpdate(Duration frameDelta) {
+    statsElapsed_ += frameDelta;
+    if (statsElapsed_ < kStatsInterval) {
+        return;
+    }
+
+    const float elapsed = seconds(statsElapsed_);
+    const uint64_t frames = frameCount() - statsFrame_;
+    const uint64_t ticks = tickCount() - statsTick_;
+
+    std::cout << "[loop] " << static_cast<float>(frames) / elapsed << " frames/s, "
+              << static_cast<float>(ticks) / elapsed << " ticks/s, "
+              << "alpha " << alpha() << ", "
+              << "dropped " << seconds(droppedTime()) << " s\n";
+
+    statsElapsed_ = Duration::zero();
+    statsFrame_ = frameCount();
+    statsTick_ = tickCount();
 }
 
 void ClientApp::onShutDown() {
