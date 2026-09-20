@@ -6,10 +6,8 @@
 namespace server {
 namespace {
 
-/** @brief Milliseconds each drain iteration blocks during shut-down. */
 constexpr uint32_t kShutdownDrainStepMs = 50;
 
-/** @brief Maximum drain iterations to wait for outstanding disconnects. */
 constexpr int kShutdownDrainSteps = 20;
 
 } // namespace
@@ -39,14 +37,13 @@ void ServerApp::onShutDown() {
         }
     }
 
-    // onDisconnect() decrements connectedPeers_ as the acknowledgements arrive.
     for (int i = 0; i < kShutdownDrainSteps && connectedPeers_ > 0; ++i) {
         service(kShutdownDrainStepMs);
     }
 
     for (ENetPeer* peer = host->peers; peer < host->peers + host->peerCount; ++peer) {
         if (peer->state != ENET_PEER_STATE_DISCONNECTED) {
-            enet_peer_reset(peer); // No acknowledgement in time: tear down locally.
+            enet_peer_reset(peer);
         }
     }
     connectedPeers_ = 0;
@@ -66,7 +63,6 @@ void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID)
               << " bytes on channel " << static_cast<int>(channelID)
               << ": " << payload << '\n';
 
-    // Echo the payload back on the same channel.
     context_.send(peer, payload, channelID);
 }
 

@@ -1,6 +1,8 @@
 #ifndef WEB_CONTEXT__H_
 #define WEB_CONTEXT__H_
 
+#include <cstdint>
+
 #include <enet/enet.h>
 #include <string_view>
 #include "shared/ENetWrappers.h"

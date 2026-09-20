@@ -19,11 +19,23 @@ ENetHostPtr make_enet_host(const ENetAddress *address, size_t peerCount,
 
 // ENetPacket *
 struct ENetPacketDeleter {
-    void operator()(ENetPacket* packet) const noexcept {
-        if (packet) enet_packet_destroy(packet);
-    }
+    void operator()(ENetPacket* packet) const noexcept;
 };
 using ENetPacketPtr = std::unique_ptr<ENetPacket, ENetPacketDeleter>;
+
+class ENetGuard {
+public:
+    ENetGuard() : ok_(enet_initialize() == 0) {}
+    ~ENetGuard() { if (ok_) enet_deinitialize(); }
+
+    ENetGuard(const ENetGuard&) = delete;
+    ENetGuard& operator=(const ENetGuard&) = delete;
+
+    explicit operator bool() const noexcept { return ok_; }
+
+private:
+    bool ok_;
+};
 
 }
 

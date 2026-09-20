@@ -69,11 +69,3 @@ add_executable(MultiplayerGame2D_Server
 )
 
 target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared Threads::Threads)
-
-# -----------------------------------------------------------------------------
-# OS-Specific Socket Dependencies
-# -----------------------------------------------------------------------------
-if(WIN32)
-  target_link_libraries(MultiplayerGame2D_Client PRIVATE ws2_32 winmm)
-  target_link_libraries(MultiplayerGame2D_Server PRIVATE ws2_32 winmm)
-endif()

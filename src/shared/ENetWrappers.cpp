@@ -10,6 +10,12 @@ void ENetHostDeleter::operator()(ENetHost* host) const noexcept {
     }
 }
 
+void ENetPacketDeleter::operator()(ENetPacket* packet) const noexcept {
+    if (packet) {
+        enet_packet_destroy(packet);
+    }
+}
+
 ENetHostPtr make_enet_host(const ENetAddress* address, size_t peerCount, 
                            size_t channelLimit, enet_uint32 incomingBandwidth, 
                            enet_uint32 outgoingBandwidth) {

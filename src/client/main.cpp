@@ -11,19 +11,11 @@
 
 namespace {
 
-constexpr const char* kDefaultHost = "127.0.0.1"; ///< Host used when none is given.
-constexpr uint16_t kDefaultPort = 1234;           ///< Port used when none is given.
-constexpr uint32_t kDefaultTPS = 60;              ///< Tick rate used when none is given.
-constexpr size_t kPeerCount = 1;                  ///< A client needs one outgoing connection.
+constexpr const char* kDefaultHost = "127.0.0.1";
+constexpr uint16_t kDefaultPort = 1234;
+constexpr uint32_t kDefaultTPS = 60;
+constexpr size_t kPeerCount = 1;
 
-/**
- * @brief Parses a decimal integer from a command-line argument.
- *
- * @tparam T    Destination integer type.
- * @param  text Argument text.
- * @param  out  Receives the parsed value; untouched on failure.
- * @return @c true if @p text was fully consumed as a valid value of @p T.
- */
 template <typename T>
 bool parseArg(std::string_view text, T& out) {
     T value{};
@@ -36,25 +28,6 @@ bool parseArg(std::string_view text, T& out) {
     return true;
 }
 
-/**
- * @brief RAII guard around @c enet_initialize() / @c enet_deinitialize().
- */
-class ENetGuard {
-public:
-    ENetGuard() : ok_(enet_initialize() == 0) {}
-    ~ENetGuard() { if (ok_) enet_deinitialize(); }
-
-    ENetGuard(const ENetGuard&) = delete;
-    ENetGuard& operator=(const ENetGuard&) = delete;
-
-    /** @brief Returns whether ENet initialised successfully. */
-    explicit operator bool() const noexcept { return ok_; }
-
-private:
-    bool ok_;
-};
-
-/** @brief Prints usage to stderr. */
 void printUsage(const char* program) {
     std::cerr << "Usage: " << program << " [host] [port] [tps]\n"
               << "  host  Server host name or address (default " << kDefaultHost << ")\n"
@@ -64,14 +37,6 @@ void printUsage(const char* program) {
 
 } // namespace
 
-/**
- * @brief Parses the command line, then runs the client until the server
- *        disconnects.
- *
- * @param argc Argument count.
- * @param argv Argument values.
- * @return @c EXIT_SUCCESS on a clean run, @c EXIT_FAILURE otherwise.
- */
 int main(int argc, char** argv) {
     std::string host = kDefaultHost;
     uint16_t port = kDefaultPort;
@@ -95,7 +60,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    const ENetGuard enet;
+    const shared::ENetGuard enet;
     if (!enet) {
         std::cerr << "Failed to initialize ENet.\n";
         return EXIT_FAILURE;

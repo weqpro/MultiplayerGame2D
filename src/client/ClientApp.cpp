@@ -7,10 +7,8 @@
 namespace client {
 namespace {
 
-/** @brief Milliseconds each drain iteration blocks during shut-down. */
 constexpr uint32_t kShutdownDrainStepMs = 50;
 
-/** @brief Maximum drain iterations to wait for the disconnect acknowledgement. */
 constexpr int kShutdownDrainSteps = 20;
 
 } // namespace
@@ -36,7 +34,7 @@ bool ClientApp::onStartUp() {
 
 void ClientApp::onTick(uint64_t tick) {
     if (!peer_ || peer_->state != ENET_PEER_STATE_CONNECTED) {
-        return; // Still handshaking; onDisconnect() handles the failure case.
+        return;
     }
 
     const std::string payload = "Tick: " + std::to_string(tick);
@@ -47,13 +45,12 @@ void ClientApp::onShutDown() {
     if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
         enet_peer_disconnect(peer_, 0);
 
-        // onDisconnect() clears peer_ once the acknowledgement arrives.
         for (int i = 0; i < kShutdownDrainSteps && peer_; ++i) {
             service(kShutdownDrainStepMs);
         }
 
         if (peer_) {
-            enet_peer_reset(peer_); // No acknowledgement in time: tear down locally.
+            enet_peer_reset(peer_);
         }
     }
     peer_ = nullptr;
