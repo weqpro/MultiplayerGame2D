@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <enet/enet.h>
+#include <windows.h>
 
 #include "server/ServerApp.h"
 
@@ -61,6 +62,13 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    InitWindow(screenWidth, screenHeight, "game");
+
+    SetTargetFPS(60);
+
     const shared::ENetGuard enet;
     if (!enet) {
         std::cerr << "Failed to initialize ENet.\n";
@@ -69,6 +77,8 @@ int main(int argc, char** argv) {
 
     server::ServerApp app(port, peers);
     app.run(tps);
+
+    CloseWindow();
 
     return EXIT_SUCCESS;
 }

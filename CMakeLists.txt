@@ -68,4 +68,4 @@ add_executable(MultiplayerGame2D_Server
   src/server/main.cpp
 )
 
-target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared Threads::Threads)
+target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)

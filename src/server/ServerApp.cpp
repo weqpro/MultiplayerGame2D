@@ -1,7 +1,9 @@
 #include "server/ServerApp.h"
+#include "server/Player.h"
 
 #include <iostream>
 #include <string_view>
+#include <raylib.h>
 
 namespace server {
 namespace {
@@ -20,6 +22,14 @@ ServerApp::ServerApp(uint16_t port, size_t peerCount)
 bool ServerApp::onStartUp() {
     std::cout << "Server listening on port " << port_
               << " (up to " << peerCount_ << " peers).\n";
+
+    World world {};
+
+    Controller controller;
+    Player player(controller, {67.0f, 67.0f});
+
+    world.appendPlayer(player, controller);
+
     return true;
 }
 
@@ -72,6 +82,13 @@ void ServerApp::onDisconnect(ENetPeer* peer) {
     }
     std::cout << "Peer disconnected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " remaining).\n";
+}
+
+void ServerApp::onTick(uint64_t tick) {
+    if (WindowShouldClose()) {
+        stop();
+    }
+    world_.update();
 }
 
 } // namespace server
