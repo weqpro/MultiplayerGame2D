@@ -34,6 +34,11 @@ FetchContent_MakeAvailable(enet raylib)
 
 target_include_directories(enet INTERFACE ${enet_SOURCE_DIR}/include)
 
+if(WIN32)
+  # enet/win32.h includes <winsock2.h> that collides with raylib.h.
+  target_compile_definitions(enet INTERFACE WIN32_LEAN_AND_MEAN NOGDI NOUSER)
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
