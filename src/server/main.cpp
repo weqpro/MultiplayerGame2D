@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <raylib.h>
 #include <string_view>
 
 #include <enet/enet.h>
@@ -64,7 +65,9 @@ int main(int argc, char** argv) {
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "game");
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
+
+    InitWindow(screenWidth, screenHeight, "server");
 
     SetTargetFPS(240);
 
