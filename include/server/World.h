@@ -11,11 +11,9 @@ class World {
 public:
     void update(float dt);
     void appendPlayer(Player player, Controller controller);
-
-    explicit World();
 private:
-    std::vector<Player> players_;
-    std::vector<Controller> controller_;
+    std::vector<Player> players_ {};
+    std::vector<Controller> controller_ {};
 };
 
 }

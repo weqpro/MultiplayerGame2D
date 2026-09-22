@@ -25,7 +25,7 @@ void Player::update() {
 }
 
 void Body::render() {
-    DrawCircleV(pos, 10, MAROON);
+    DrawCircleV(pos, 10.0f, MAROON);
 }
 
 }

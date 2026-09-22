@@ -23,12 +23,11 @@ bool ServerApp::onStartUp() {
     std::cout << "Server listening on port " << port_
               << " (up to " << peerCount_ << " peers).\n";
 
-    World world {};
 
     Controller controller;
     Player player(controller, {67.0f, 67.0f});
 
-    world.appendPlayer(player, controller);
+    world_.appendPlayer(player, controller);
 
     return true;
 }
@@ -88,7 +87,7 @@ void ServerApp::onTick(uint64_t tick) {
     if (WindowShouldClose()) {
         stop();
     }
-    world_.update();
+    world_.update(0.1f);
 }
 
 } // namespace server

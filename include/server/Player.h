@@ -10,7 +10,7 @@ struct Intent {
 };
 
 struct Body {
-    Vector2 pos;
+    Vector2 pos {0.0f, 0.0f};
     float speed = 5.0f;
     void render();
 };
@@ -25,7 +25,7 @@ public:
     Body body;
     Intent intent;
 
-    explicit Player(Controller& controller, Vector2 spawnPoint) : body(spawnPoint), intent(), controller_(controller) {}
+    explicit Player(Controller& controller, Vector2 spawnPoint) : body(), intent(), controller_(controller) {body.pos = spawnPoint;}
     void update();
 private:
     Controller &controller_;

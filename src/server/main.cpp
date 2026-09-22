@@ -6,7 +6,6 @@
 #include <string_view>
 
 #include <enet/enet.h>
-#include <windows.h>
 
 #include "server/ServerApp.h"
 
@@ -14,7 +13,7 @@ namespace {
 
 constexpr uint16_t kDefaultPort = 1234;
 constexpr size_t kDefaultPeers = 32;
-constexpr uint32_t kDefaultTPS = 20;
+constexpr uint32_t kDefaultTPS = 120;
 
 template <typename T>
 bool parseArg(std::string_view text, T& out) {
@@ -67,7 +66,7 @@ int main(int argc, char** argv) {
 
     InitWindow(screenWidth, screenHeight, "game");
 
-    SetTargetFPS(60);
+    SetTargetFPS(240);
 
     const shared::ENetGuard enet;
     if (!enet) {

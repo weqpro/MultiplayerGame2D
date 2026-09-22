@@ -66,6 +66,8 @@ add_executable(MultiplayerGame2D_Server
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp
   src/server/main.cpp
+  src/server/Player.cpp
+  src/server/World.cpp
 )
 
 target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)
