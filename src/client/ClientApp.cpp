@@ -1,6 +1,8 @@
 #include "client/ClientApp.h"
+#include "client/World.h"
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -14,7 +16,9 @@ constexpr int kShutdownDrainSteps = 20;
 } // namespace
 
 ClientApp::ClientApp(uint16_t port, size_t peerCount)
-    : ClientApp("127.0.0.1", port, peerCount) {}
+    : ClientApp("127.0.0.1", port, peerCount) {
+    world_ = std::make_unique<World>(context_);
+}
 
 ClientApp::ClientApp(std::string hostName, uint16_t port, size_t peerCount)
     : Base(peerCount),
@@ -29,6 +33,8 @@ bool ClientApp::onStartUp() {
         std::cerr << "ClientApp startup failed: Could not initiate connection.\n";
         return false;
     }
+
+    world_->joinPlayer({148.8f, 148.8f});
     return true;
 }
 
@@ -36,6 +42,8 @@ void ClientApp::onTick(uint64_t tick) {
     if (!peer_ || peer_->state != ENET_PEER_STATE_CONNECTED) {
         return;
     }
+
+    world_->update(0.1f);
 
     const std::string payload = "Tick: " + std::to_string(tick);
     context_.send(peer_, payload, 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
