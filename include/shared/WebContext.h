@@ -1,10 +1,11 @@
 #ifndef WEB_CONTEXT__H_
 #define WEB_CONTEXT__H_
 
+#include <cstddef>
 #include <cstdint>
 
 #include <enet/enet.h>
-#include <string_view>
+#include <span>
 #include "shared/ENetWrappers.h"
 
 namespace shared::network {
@@ -42,8 +43,8 @@ public:
         }
     }
 
-    bool send(ENetPeer* peer, std::string_view payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
-    void broadcast(std::string_view payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
+    bool send(ENetPeer* peer, std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
+    void broadcast(std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
 
     ENetHost* getHost() const { return host_.get(); }
 

@@ -2,13 +2,14 @@
 #define MESSAGES__H_
 
 #include <concepts>
-#include <string_view>
+#include <cstddef>
+#include <span>
 
 namespace shared {
 
 template <typename T>
 concept Serializable = requires(T t) {
-    { t.serialize() } -> std::same_as<std::string_view>;
+    { t.serialize() } -> std::same_as<std::span<const std::byte>>;
 };
 
 template<Serializable T>

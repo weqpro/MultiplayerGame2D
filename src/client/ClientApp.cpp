@@ -1,8 +1,10 @@
 #include "client/ClientApp.h"
 #include "client/World.h"
 
+#include <cstddef>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -46,7 +48,7 @@ void ClientApp::onTick(uint64_t tick) {
     world_->update(0.1f);
 
     const std::string payload = "Tick: " + std::to_string(tick);
-    context_.send(peer_, payload, 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+    context_.send(peer_, std::as_bytes(std::span{payload}), 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
 }
 
 void ClientApp::onShutDown() {

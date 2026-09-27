@@ -6,7 +6,7 @@ project(
   LANGUAGES C CXX
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -59,6 +59,8 @@ target_link_libraries(GameShared PUBLIC enet)
 add_executable(MultiplayerGame2D_Client
   src/client/ClientApp.cpp
   src/client/WebClientContext.cpp
+  src/client/Player.cpp
+  src/client/World.cpp
   src/client/main.cpp
 )
 

@@ -1,7 +1,9 @@
 #include "server/ServerApp.h"
 #include "server/Player.h"
 
+#include <cstddef>
 #include <iostream>
+#include <span>
 #include <string_view>
 #include <raylib.h>
 
@@ -65,12 +67,15 @@ void ServerApp::onConnect(ENetPeer* peer) {
 }
 
 void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
-    const std::string_view payload(reinterpret_cast<const char*>(packet->data),
-                                   packet->dataLength);
+    const std::span<const std::byte> payload(
+        reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
+
+    const std::string_view text(reinterpret_cast<const char*>(packet->data),
+                                packet->dataLength);
 
     std::cout << "Received " << payload.size()
               << " bytes on channel " << static_cast<int>(channelID)
-              << ": " << payload << '\n';
+              << ": " << text << '\n';
 
     context_.send(peer, payload, channelID);
 }

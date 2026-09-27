@@ -2,7 +2,7 @@
 
 namespace shared::network {
 
-bool WebContext::send(ENetPeer* peer, std::string_view payload, uint8_t channelID, enet_uint32 flags) {
+bool WebContext::send(ENetPeer* peer, std::span<const std::byte> payload, uint8_t channelID, enet_uint32 flags) {
     if (!peer) return false;
 
     ENetPacket* packet = enet_packet_create(payload.data(), payload.size(), flags);
@@ -16,7 +16,7 @@ bool WebContext::send(ENetPeer* peer, std::string_view payload, uint8_t channelI
     return true;
 }
 
-void WebContext::broadcast(std::string_view payload, uint8_t channelID, enet_uint32 flags) {
+void WebContext::broadcast(std::span<const std::byte> payload, uint8_t channelID, enet_uint32 flags) {
     if (!host_) return;
 
     ENetPacket* packet = enet_packet_create(payload.data(), payload.size(), flags);

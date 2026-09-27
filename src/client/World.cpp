@@ -2,7 +2,8 @@
 #include "client/Player.h"
 #include "client/WebClientContext.h"
 #include <raylib.h>
-#include <string_view>
+#include <cstddef>
+#include <span>
 
 namespace client {
 
@@ -10,10 +11,8 @@ void World::update(float dt) {
     auto player = player_.value();
     player.update();
 
-    std::string_view intentBytes {
-        reinterpret_cast<const char*>(&player.intent),
-        sizeof(Intent)
-    };
+    const std::span<const std::byte> intentBytes =
+        std::as_bytes(std::span{&player.intent, 1});
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
