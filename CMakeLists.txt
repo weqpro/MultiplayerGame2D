@@ -52,7 +52,7 @@ add_library(GameShared STATIC
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GameShared PUBLIC enet)
+target_link_libraries(GameShared PUBLIC enet raylib)
 
 # -----------------------------------------------------------------------------
 # 2. Client Executable

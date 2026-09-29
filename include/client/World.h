@@ -16,7 +16,7 @@ public:
 
     std::span<std::byte> messageBuf;
 private:
-    Controller playerController_;
+    Controller playerController_ {};
 };
 
 }

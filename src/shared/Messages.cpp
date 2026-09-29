@@ -2,11 +2,9 @@
 
 namespace shared {
 
-std::span<const std::byte> IntentMessage::serialize() {
-    for (size_t i = 0; i < sizeof(float)/sizeof(std::byte); ++i) {
-
-    }
-    return data;
+void IntentMessage::serialize(Writer& writer) const {
+    writer.write<float>(intent.x);
+    writer.write<float>(intent.y);
 }
 
 }
