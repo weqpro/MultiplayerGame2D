@@ -10,8 +10,9 @@ namespace server {
 class Renderer {
 public:
     void render();
+    void addBody(Body *body);
 private:
-    std::vector<Body*> bodies_;
+    std::vector<Body*> bodies_ {};
 };
 
 }

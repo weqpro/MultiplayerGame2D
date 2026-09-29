@@ -33,6 +33,7 @@ bool ServerApp::onStartUp() {
     Player *player = new Player{std::move(ctr), {67.0f, 67.0f}};
 
     world_.joinPlayer(player);
+    renderer_.addBody(&player->body);
 
     return true;
 }

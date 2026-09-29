@@ -35,7 +35,8 @@ public:
     Body body;
 
     explicit Player(std::unique_ptr<Controller> controller, Vector2 spawnPoint) : body(), controller_(std::move(controller)) { body.pos = spawnPoint; }
-    void update();
+    Intent getIntent();
+    void setIntent(Intent i);
 private:
     std::unique_ptr<Controller> controller_; //TODO: make server player controller
 };

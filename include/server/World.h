@@ -13,7 +13,7 @@ public:
     size_t joinPlayer(Player *player);
     void removePlayer(size_t playerId);
 
-    void setPlayerIntent(size_t playerId, Intent intent);
+    void setClientPlayerIntent(size_t playerId, Intent intent);
 private:
     std::vector<Player*> players_ {};
 };

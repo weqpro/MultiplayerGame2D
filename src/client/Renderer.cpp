@@ -10,6 +10,8 @@ void Renderer::render() {
     }
     EndDrawing();
 }
-
+void Renderer::addBody(Body *body) {
+    bodies_.push_back(body);
+}
 
 }

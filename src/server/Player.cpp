@@ -24,10 +24,18 @@ Intent ClientController::getIntent() {
     return intent_;
 }
 
-void Player::update() {
-    intent = controller_.getIntent();
+void ClientController::setIntent(Intent i) {
+    intent_ = i;
 }
 
+Intent Player::getIntent() {
+    return controller_->getIntent();
+}
+
+void Player::setIntent(Intent i) {
+    auto ctr = static_cast<ClientController *>(controller_.get());
+    ctr->setIntent(i);
+}
 void Body::render() const {
     DrawCircleV(pos, 10.0f, LIME);
 }
