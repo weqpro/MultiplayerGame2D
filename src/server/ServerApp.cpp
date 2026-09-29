@@ -4,8 +4,11 @@
 #include <cstddef>
 #include <iostream>
 #include <span>
+#include <memory>
 #include <string_view>
 #include <raylib.h>
+
+#include "shared/Serialization.h"
 
 namespace server {
 namespace {
@@ -26,10 +29,10 @@ bool ServerApp::onStartUp() {
               << " (up to " << peerCount_ << " peers).\n";
 
 
-    Controller controller;
-    Player player(controller, {67.0f, 67.0f});
+    auto ctr = std::make_unique<Controller>();
+    Player *player = new Player{std::move(ctr), {67.0f, 67.0f}};
 
-    world_.appendPlayer(player, controller);
+    world_.joinPlayer(player);
 
     return true;
 }
@@ -62,6 +65,14 @@ void ServerApp::onShutDown() {
 
 void ServerApp::onConnect(ENetPeer* peer) {
     ++connectedPeers_;
+    Vector2 spawnPoint {
+        static_cast<float>(GetRandomValue(100, 200)),
+        static_cast<float>(GetRandomValue(100, 200))
+    };
+    auto ctrl = std::make_unique<ClientController>();
+    Player *player = new Player{std::move(ctrl), spawnPoint};
+    size_t *id = new size_t{world_.joinPlayer(player)}; //NOTE: do smth about it
+    peer->data = id;
     std::cout << "Peer connected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " total).\n";
 }
@@ -73,7 +84,13 @@ void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID)
     const std::string_view text(reinterpret_cast<const char*>(packet->data),
                                 packet->dataLength);
 
-    std::cout << "Received " << payload.size()
+    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength);
+    shared::Reader reader{data};
+
+    auto posX = reader.read<float>();
+    auto posY = reader.read<float>();
+
+    std::cout << "Unread " << reader.remaining()
               << " bytes on channel " << static_cast<int>(channelID)
               << ": " << text << '\n';
 
@@ -86,6 +103,11 @@ void ServerApp::onDisconnect(ENetPeer* peer) {
     }
     std::cout << "Peer disconnected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " remaining).\n";
+
+    size_t playerId = *static_cast<size_t *>(peer->data);
+
+    world_.removePlayer(playerId);
+    delete static_cast<size_t *>(peer->data);
 }
 
 void ServerApp::onTick(uint64_t tick) {
@@ -93,6 +115,8 @@ void ServerApp::onTick(uint64_t tick) {
         stop();
     }
     world_.update(0.1f);
+    renderer_.render();
+
 }
 
 } // namespace server

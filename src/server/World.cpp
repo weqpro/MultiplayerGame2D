@@ -5,23 +5,26 @@ namespace server {
 
 void World::update(float dt) {
     for (auto& player : players_) {
-        player.update();
+        player->update();
     }
     for (auto& player: players_) {
-        player.body.pos.x += player.intent.input.x * player.body.speed * dt;
-        player.body.pos.y += player.intent.input.y * player.body.speed * dt;
+        player->body.pos.x += player->intent.input.x * player->body.speed * dt;
+        player->body.pos.y += player->intent.input.y * player->body.speed * dt;
     }
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-    for (auto& player : players_) {
-        player.body.render();
-    }
-    EndDrawing();
 }
 
-void World::appendPlayer(Player player, Controller controller) {
+size_t World::joinPlayer(Player *player) {
     players_.push_back(player);
-    controller_.push_back(controller);
+    return players_.size() - 1;
+}
+
+void World::removePlayer(size_t playerId) {
+    delete players_[playerId];
+    players_.erase(players_.begin() + playerId);
+}
+
+void World::setPlayerIntent(size_t playerId, Intent intent) {
+    players_[playerId]->intent = intent;
 }
 
 

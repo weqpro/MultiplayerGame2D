@@ -10,10 +10,12 @@ namespace server {
 class World {
 public:
     void update(float dt);
-    void appendPlayer(Player player, Controller controller);
+    size_t joinPlayer(Player *player);
+    void removePlayer(size_t playerId);
+
+    void setPlayerIntent(size_t playerId, Intent intent);
 private:
-    std::vector<Player> players_ {};
-    std::vector<Controller> controller_ {};
+    std::vector<Player*> players_ {};
 };
 
 }

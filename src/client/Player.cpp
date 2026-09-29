@@ -1,4 +1,5 @@
 #include "client/Player.h"
+#include <cmath>
 #include <raylib.h>
 
 namespace client {
@@ -20,11 +21,9 @@ Intent Controller::getIntent() {
     return intent;
 }
 
-void Player::update() {
-    intent = controller_.getIntent();
-}
 
-void Body::render() {
+void Body::render() const {
+    if (std::isnan(pos.x) || std::isnan(pos.y)) return;
     DrawCircleV(pos, 10.0f, MAROON);
 }
 

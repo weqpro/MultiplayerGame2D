@@ -10,6 +10,7 @@
 #include "client/World.h"
 #include "shared/AppBase.h"
 #include "client/WebClientContext.h"
+#include "client/Renderer.h"
 
 namespace client {
 
@@ -41,6 +42,7 @@ private:
     ENetPeer* peer_{nullptr};
 
     std::unique_ptr<World> world_;
+    std::unique_ptr<Renderer> renderer_;
 };
 
 } // namespace client

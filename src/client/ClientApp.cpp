@@ -2,11 +2,14 @@
 #include "client/World.h"
 
 #include <cstddef>
+#include <enet/enet.h>
 #include <iostream>
 #include <memory>
 #include <span>
 #include <string>
 #include <utility>
+
+#include "shared/Serialization.h"
 
 namespace client {
 namespace {
@@ -19,7 +22,8 @@ constexpr int kShutdownDrainSteps = 20;
 
 ClientApp::ClientApp(uint16_t port, size_t peerCount)
     : ClientApp("127.0.0.1", port, peerCount) {
-    world_ = std::make_unique<World>(context_);
+    world_ = std::make_unique<World>();
+    renderer_ = std::make_unique<Renderer>();
 }
 
 ClientApp::ClientApp(std::string hostName, uint16_t port, size_t peerCount)
@@ -36,7 +40,6 @@ bool ClientApp::onStartUp() {
         return false;
     }
 
-    world_->joinPlayer({148.8f, 148.8f});
     return true;
 }
 
@@ -46,6 +49,10 @@ void ClientApp::onTick(uint64_t tick) {
     }
 
     world_->update(0.1f);
+
+    context_.send(peer_, world_->messageBuf, 0,  ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+
+    renderer_->render();
 
     const std::string payload = "Tick: " + std::to_string(tick);
     context_.send(peer_, std::as_bytes(std::span{payload}), 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);

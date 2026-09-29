@@ -1,27 +1,27 @@
 #include "client/World.h"
 #include "client/Player.h"
-#include "client/WebClientContext.h"
 #include <raylib.h>
-#include <cstddef>
-#include <span>
+#include <iostream>
+
+#include "shared/Serialization.h"
 
 namespace client {
 
 void World::update(float dt) {
-    auto player = player_.value();
-    player.update();
+    auto intent = playerController_.getIntent();
 
-    const std::span<const std::byte> intentBytes =
-        std::as_bytes(std::span{&player.intent, 1});
+    std::span<std::byte> buf{};
+    shared::Writer writer(buf);
+    writer.write(intent.input.x);
+    writer.write(intent.input.y);
 
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-    player.body.render();
-    EndDrawing();
-}
+    if (!writer.ok()) {
+        //TODO: handle
+        std::cerr << "Writer not ok" << std::endl;
+        std::cerr << "Written: " << writer.written() << std::endl;
+    }
 
-void World::joinPlayer(Vector2 spawn) {
-    player_.emplace(controller_, spawn);
+    messageBuf = buf;
 }
 
 

@@ -1,6 +1,7 @@
 #ifndef PLAYER__H_
 #define PLAYER__H_
 
+#include <cmath>
 #include <raylib.h>
 
 namespace client {
@@ -10,25 +11,14 @@ struct Intent {
 };
 
 struct Body {
-    Vector2 pos {0.0f, 0.0f};
+    Vector2 pos {NAN, NAN};
     float speed = 5.0f;
-    void render();
+    void render() const;
 };
 
 class Controller {
 public:
     Intent getIntent();
-};
-
-class Player {
-public:
-    Body body;
-    Intent intent;
-
-    explicit Player(Controller& controller, Vector2 spawnPoint) : body(), intent(), controller_(controller) {body.pos = spawnPoint;}
-    void update();
-private:
-    Controller &controller_;
 };
 
 }

@@ -20,11 +20,15 @@ Intent Controller::getIntent() {
     return intent;
 }
 
+Intent ClientController::getIntent() {
+    return intent_;
+}
+
 void Player::update() {
     intent = controller_.getIntent();
 }
 
-void Body::render() {
+void Body::render() const {
     DrawCircleV(pos, 10.0f, LIME);
 }
 
