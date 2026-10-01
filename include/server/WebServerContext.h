@@ -1,5 +1,5 @@
-#ifndef WEB_SERVER_CONTEXT__H_
-#define WEB_SERVER_CONTEXT__H_
+#ifndef SERVER_WEB_SERVER_CONTEXT_H
+#define SERVER_WEB_SERVER_CONTEXT_H
 
 #include <cstdint>
 #include <string>
@@ -27,4 +27,4 @@ private:
 
 } // namespace server
 
-#endif // !WEB_SERVER_CONTEXT__H_
+#endif // SERVER_WEB_SERVER_CONTEXT_H

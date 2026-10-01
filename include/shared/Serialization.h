@@ -1,5 +1,5 @@
-#ifndef SERIALIZATION__H_
-#define SERIALIZATION__H_
+#ifndef SHARED_SERIALIZATION_H
+#define SHARED_SERIALIZATION_H
 
 #include <bit>
 #include <cstddef>
@@ -149,4 +149,4 @@ private:
 
 }
 
-#endif
+#endif // SHARED_SERIALIZATION_H

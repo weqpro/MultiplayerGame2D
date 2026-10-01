@@ -1,5 +1,5 @@
-#ifndef WRAPPERS__H_
-#define WRAPPERS__H_
+#ifndef SHARED_ENET_WRAPPERS_H
+#define SHARED_ENET_WRAPPERS_H
 
 #include <enet/enet.h>
 #include <memory>
@@ -39,4 +39,4 @@ private:
 
 }
 
-#endif
+#endif // SHARED_ENET_WRAPPERS_H

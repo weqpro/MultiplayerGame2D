@@ -1,5 +1,5 @@
-#ifndef WEB_CLIENT_CONTEXT__H_
-#define WEB_CLIENT_CONTEXT__H_
+#ifndef CLIENT_WEB_CLIENT_CONTEXT_H
+#define CLIENT_WEB_CLIENT_CONTEXT_H
 
 #include <string>
 #include <enet/enet.h>
@@ -20,4 +20,4 @@ public:
 
 } // !namespace client
 
-#endif // WEB_CLIENT_CONTEXT__H_
+#endif // CLIENT_WEB_CLIENT_CONTEXT_H

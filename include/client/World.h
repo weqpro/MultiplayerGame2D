@@ -1,5 +1,5 @@
-#ifndef WORLD__H_
-#define WORLD__H_
+#ifndef CLIENT_WORLD_H
+#define CLIENT_WORLD_H
 
 #include <raylib.h>
 #include <unordered_map>
@@ -24,4 +24,4 @@ private:
 
 }
 
-#endif
+#endif // CLIENT_WORLD_H

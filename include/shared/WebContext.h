@@ -1,5 +1,5 @@
-#ifndef WEB_CONTEXT__H_
-#define WEB_CONTEXT__H_
+#ifndef SHARED_WEB_CONTEXT_H
+#define SHARED_WEB_CONTEXT_H
 
 #include <cstddef>
 #include <cstdint>
@@ -57,4 +57,4 @@ protected:
 
 } // namespace network
 
-#endif // WEB_CONTEXT__H_
+#endif // SHARED_WEB_CONTEXT_H

@@ -1,5 +1,5 @@
-#ifndef RENDERER__H_
-#define RENDERER__H_
+#ifndef SERVER_RENDERER_H
+#define SERVER_RENDERER_H
 
 #include <vector>
 
@@ -18,4 +18,4 @@ private:
 
 }
 
-#endif
+#endif // SERVER_RENDERER_H

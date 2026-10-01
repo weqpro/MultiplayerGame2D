@@ -1,5 +1,5 @@
-#ifndef WORLD__H_
-#define WORLD__H_
+#ifndef SERVER_WORLD_H
+#define SERVER_WORLD_H
 
 #include <unordered_map>
 #include <vector>
@@ -24,4 +24,4 @@ private:
 
 }
 
-#endif
+#endif // SERVER_WORLD_H

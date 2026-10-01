@@ -1,5 +1,5 @@
-#ifndef RENDERER__H_
-#define RENDERER__H_
+#ifndef CLIENT_RENDERER_H
+#define CLIENT_RENDERER_H
 
 #include <vector>
 
@@ -17,4 +17,4 @@ private:
 
 }
 
-#endif
+#endif // CLIENT_RENDERER_H

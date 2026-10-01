@@ -1,5 +1,5 @@
-#ifndef SERVER_APP__H_
-#define SERVER_APP__H_
+#ifndef SERVER_SERVER_APP_H
+#define SERVER_SERVER_APP_H
 
 #include <cstddef>
 #include <cstdint>
@@ -50,4 +50,4 @@ private:
 
 } // namespace server
 
-#endif // SERVER_APP__H_
+#endif // SERVER_SERVER_APP_H

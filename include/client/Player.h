@@ -1,5 +1,5 @@
-#ifndef PLAYER__H_
-#define PLAYER__H_
+#ifndef CLIENT_PLAYER_H
+#define CLIENT_PLAYER_H
 
 #include <cmath>
 #include <raylib.h>
@@ -28,4 +28,4 @@ struct Player {
 
 }
 
-#endif
+#endif // CLIENT_PLAYER_H

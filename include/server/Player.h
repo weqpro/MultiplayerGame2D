@@ -1,5 +1,5 @@
-#ifndef PLAYER__H_
-#define PLAYER__H_
+#ifndef SERVER_PLAYER_H
+#define SERVER_PLAYER_H
 
 #include <memory>
 
@@ -49,4 +49,4 @@ private:
 
 }
 
-#endif
+#endif // SERVER_PLAYER_H

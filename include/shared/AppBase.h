@@ -1,5 +1,5 @@
-#ifndef APP_BASE__H_
-#define APP_BASE__H_
+#ifndef SHARED_APP_BASE_H
+#define SHARED_APP_BASE_H
 
 #include <chrono>
 #include <cstdint>
@@ -103,4 +103,4 @@ private:
 
 } // namespace shared
 
-#endif // APP_BASE__H_
+#endif // SHARED_APP_BASE_H

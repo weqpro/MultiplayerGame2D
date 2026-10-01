@@ -1,5 +1,5 @@
-#ifndef MESSAGES__H_
-#define MESSAGES__H_
+#ifndef SHARED_MESSAGES_H
+#define SHARED_MESSAGES_H
 
 #include <concepts>
 #include <type_traits>
@@ -241,4 +241,4 @@ struct PlayersMessage {
 
 }
 
-#endif // !MESSAGES__H_
+#endif // SHARED_MESSAGES_H

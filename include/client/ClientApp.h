@@ -1,5 +1,5 @@
-#ifndef CLIENT_APP__H_
-#define CLIENT_APP__H_
+#ifndef CLIENT_CLIENT_APP_H
+#define CLIENT_CLIENT_APP_H
 
 #include <cstdint>
 #include <memory>
@@ -48,4 +48,4 @@ private:
 
 } // namespace client
 
-#endif // CLIENT_APP__H_
+#endif // CLIENT_CLIENT_APP_H
