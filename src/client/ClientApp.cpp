@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 
-#include "shared/Serialization.h"
+#include "shared/Messages.h"
 
 namespace client {
 namespace {
@@ -47,12 +47,15 @@ bool ClientApp::onStartUp() {
 }
 
 void ClientApp::onTick(uint64_t tick) {
+    if (WindowShouldClose()) {
+        stop();
+    }
     if (!peer_ || peer_->state != ENET_PEER_STATE_CONNECTED) {
         return;
     }
 
-    world_->update(0.1f);
-    context_.send(peer_, world_->messageBuf, 0,  ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+    world_->update(1.0f/TPS);
+    context_.send(peer_, world_->messageBuf, 0,0);
     renderer_->render();
 }
 
@@ -75,9 +78,35 @@ void ClientApp::onConnect(ENetPeer* /*peer*/) {
     std::cout << "Connected to server.\n";
 }
 
-void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t channelID) {
-    std::cout << "Received " << packet->dataLength
-              << " bytes on channel " << static_cast<int>(channelID) << ".\n";
+void ClientApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
+    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength); auto mType = shared::peek_type(data);
+    if (!mType) {
+        //TODO: handle 
+        std::cout << "Invalid type" << std::endl;
+        return;
+    }
+    switch (mType.value()) {
+        case shared::MessageType::PLAYERS: {
+            auto packet = shared::Packet<shared::PlayersMessage>::deserialize(data);
+            if (!packet) {
+                //TODO: handle
+                std::cout << "Deserialize failed" << std::endl;
+                break;
+            }
+            auto players = packet->message;
+            world_->players_ = {};
+            world_->players_.reserve(players.players.size());
+            renderer_->bodies_ = {};
+            renderer_->bodies_.reserve(players.players.size());
+            for (auto& player : players.players) {
+                world_->players_[player.id]->body.pos = player.body.pos;
+                renderer_->addBody(&world_->players_[player.id]->body);
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void ClientApp::onDisconnect(ENetPeer* /*peer*/) {

@@ -15,4 +15,9 @@ void Renderer::addBody(Body *body) {
     bodies_.push_back(body);
 }
 
+void Renderer::removeBody(size_t bodyId) {
+    delete bodies_[bodyId];
+    bodies_.erase(bodies_.begin() + bodyId);
+}
+
 }

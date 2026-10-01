@@ -20,7 +20,7 @@ namespace shared {
 
 enum class MessageType : uint16_t {
     INTENT,
-    BODIES,
+    PLAYERS,
     COUNT
 };
 
@@ -213,18 +213,24 @@ struct IntentMessage {
 };
  
 struct Body {
-    std::uint32_t id{};
-    Vector2 position{};
+    Vector2 pos{};
  
-    static constexpr auto fields(auto& self) { return std::tie(self.id, self.position); }
+    static constexpr auto fields(auto& self) { return std::tie(self.pos); }
+};
+
+struct Player {
+    std::uint32_t id{};
+    Body body;
+    
+    static constexpr auto fields(auto& self) { return std::tie(self.id, self.body); }
 };
  
-struct BodiesMessage {
-    static constexpr MessageType TYPE = MessageType::BODIES;
+struct PlayersMessage {
+    static constexpr MessageType TYPE = MessageType::PLAYERS;
  
-    std::vector<Body> bodies;
+    std::vector<Player> players;
  
-    static constexpr auto fields(auto& self) { return std::tie(self.bodies); }
+    static constexpr auto fields(auto& self) { return std::tie(self.players); }
 };
 
 }

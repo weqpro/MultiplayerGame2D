@@ -30,6 +30,7 @@ public:
 
     void onDisconnect(ENetPeer* peer);
 
+    static constexpr size_t TPS = 60;
 private:
     bool onStartUp();
 

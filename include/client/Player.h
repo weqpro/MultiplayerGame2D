@@ -21,6 +21,10 @@ public:
     Intent getIntent();
 };
 
+struct Player {
+    Body body;
+};
+
 }
 
 #endif
