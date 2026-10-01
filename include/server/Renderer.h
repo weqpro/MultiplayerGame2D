@@ -11,7 +11,7 @@ class Renderer {
 public:
     void render();
     void addBody(Body *body);
-    void removeBody(size_t bodyId);
+    void removeBody(const Body *body);
 private:
     std::vector<Body*> bodies_ {};
 };

@@ -14,6 +14,7 @@ public:
     void update(float dt);
     void joinPlayer(Player *player, size_t playerId);
     void removePlayer(size_t playerId);
+    Player* getPlayer(size_t playerId);
 
     void setClientPlayerIntent(size_t playerId, Intent intent);
     std::vector<std::byte> messageBuf;

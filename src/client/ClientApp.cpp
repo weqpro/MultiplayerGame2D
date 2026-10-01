@@ -94,14 +94,15 @@ void ClientApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID)
                 break;
             }
             auto players = packet->message;
-            world_->players_ = {};
-            world_->players_.reserve(players.players.size());
-            renderer_->bodies_ = {};
-            renderer_->bodies_.reserve(players.players.size());
+            world_->players_.clear();
+            renderer_->bodies_.clear();
             for (auto& player : players.players) {
-                world_->players_[player.id] = {};
-                world_->players_[player.id]->body.pos = player.body.pos;
-                renderer_->addBody(&world_->players_[player.id]->body);
+                auto& local = world_->players_[player.id];
+                local.body.pos = player.body.pos;
+                local.body.color = player.body.color;
+            }
+            for (auto& [id, player] : world_->players_) {
+                renderer_->addBody(&player.body);
             }
             break;
         }

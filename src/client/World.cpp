@@ -26,12 +26,11 @@ void World::update(float dt) {
     messageBuf = bytes.value();
 }
 
-void World::joinPlayer(Player *player, size_t playerId) {
+void World::joinPlayer(Player player, size_t playerId) {
     players_[playerId] = player;
 }
 
 void World::removePlayer(size_t playerId) {
-    delete players_[playerId];
     players_.erase(playerId);
 }
 

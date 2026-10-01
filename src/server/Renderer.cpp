@@ -15,9 +15,8 @@ void Renderer::addBody(Body *body) {
     bodies_.push_back(body);
 }
 
-void Renderer::removeBody(size_t bodyId) {
-    delete bodies_[bodyId];
-    bodies_.erase(bodies_.begin() + bodyId);
+void Renderer::removeBody(const Body *body) {
+    std::erase(bodies_, body);
 }
 
 }

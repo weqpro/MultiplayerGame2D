@@ -16,7 +16,8 @@ void World::update(float dt) {
         players.push_back({
             .id = static_cast<uint32_t>(playerId), 
             .body = {
-                .pos = player->body.pos
+                .pos = player->body.pos,
+                .color = player->body.color
             }
         });
     };
@@ -41,12 +42,23 @@ void World::joinPlayer(Player *player, size_t playerId) {
 }
 
 void World::removePlayer(size_t playerId) {
-    delete players_[playerId];
-    players_.erase(playerId);
+    auto it = players_.find(playerId);
+    if (it == players_.end()) {
+        return;
+    }
+    delete it->second;
+    players_.erase(it);
+}
+
+Player* World::getPlayer(size_t playerId) {
+    auto it = players_.find(playerId);
+    return it == players_.end() ? nullptr : it->second;
 }
 
 void World::setClientPlayerIntent(size_t playerId, Intent intent) {
-    players_[playerId]->setIntent(intent);
+    if (Player* player = getPlayer(playerId)) {
+        player->setIntent(intent);
+    }
 }
 
 

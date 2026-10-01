@@ -31,6 +31,11 @@ template <>
 struct ExternalFields<Vector2> {
     static constexpr auto get(auto& v) { return std::tie(v.x, v.y); }
 };
+
+template <>
+struct ExternalFields<Color> {
+    static constexpr auto get(auto& c) { return std::tie(c.r, c.g, c.b, c.a); }
+};
  
 template <typename T>
 concept HasMemberFields = requires(T& t, const T& ct) {
@@ -214,8 +219,9 @@ struct IntentMessage {
  
 struct Body {
     Vector2 pos{};
- 
-    static constexpr auto fields(auto& self) { return std::tie(self.pos); }
+    Color color{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.pos, self.color); }
 };
 
 struct Player {

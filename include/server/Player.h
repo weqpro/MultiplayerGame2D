@@ -14,8 +14,11 @@ struct Intent {
 struct Body {
     Vector2 pos {0.0f, 0.0f};
     float speed = 50.0f;
+    Color color = DARKGRAY;
     void render() const;
 };
+
+Color randomPlayerColor();
 
 class Controller {
 public:
@@ -34,7 +37,10 @@ class Player {
 public:
     Body body;
 
-    explicit Player(std::unique_ptr<Controller> controller, Vector2 spawnPoint) : body(), controller_(std::move(controller)) { body.pos = spawnPoint; }
+    explicit Player(std::unique_ptr<Controller> controller, Vector2 spawnPoint) : body(), controller_(std::move(controller)) {
+        body.pos = spawnPoint;
+        body.color = randomPlayerColor();
+    }
     Intent getIntent();
     void setIntent(Intent i);
 private:
