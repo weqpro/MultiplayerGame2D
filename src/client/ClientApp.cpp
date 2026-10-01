@@ -29,7 +29,10 @@ ClientApp::ClientApp(uint16_t port, size_t peerCount)
 ClientApp::ClientApp(std::string hostName, uint16_t port, size_t peerCount)
     : Base(peerCount),
       hostName_(std::move(hostName)),
-      port_(port) {}
+      port_(port) {
+    world_ = std::make_unique<World>();
+    renderer_ = std::make_unique<Renderer>();
+}
 
 bool ClientApp::onStartUp() {
     std::cout << "Initiating connection to " << hostName_ << ":" << port_ << "...\n";
@@ -49,13 +52,8 @@ void ClientApp::onTick(uint64_t tick) {
     }
 
     world_->update(0.1f);
-
     context_.send(peer_, world_->messageBuf, 0,  ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
-
     renderer_->render();
-
-    const std::string payload = "Tick: " + std::to_string(tick);
-    context_.send(peer_, std::as_bytes(std::span{payload}), 0, ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
 }
 
 void ClientApp::onShutDown() {

@@ -90,6 +90,11 @@ void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID)
     switch (mType.value()) {
         case shared::MessageType::INTENT: {
             auto packet = shared::Packet<shared::IntentMessage>::deserialize(data);
+            if (!packet) {
+                //TODO: handle
+                std::cout << "Deserialize failed" << std::endl;
+                break;
+            }
             auto m = packet->message.intent;
             size_t playerId = *static_cast<size_t*>(peer->data);
             world_.setClientPlayerIntent(playerId, {m});

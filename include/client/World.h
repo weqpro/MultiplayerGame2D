@@ -1,9 +1,8 @@
 #ifndef WORLD__H_
 #define WORLD__H_
 
-#include <span>
-
 #include <raylib.h>
+#include <vector>
 
 #include "client/Player.h"
 
@@ -14,7 +13,7 @@ public:
     World() : playerController_ {} {};
     void update(float dt);
 
-    std::span<std::byte> messageBuf;
+    std::vector<std::byte> messageBuf;
 private:
     Controller playerController_ {};
 };
