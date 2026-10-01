@@ -5,6 +5,12 @@
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
+#include <optional>
+#include <span>
+#include <vector>
+#include <limits>
+#include <ranges>
 
 #include <raylib.h>
 
@@ -20,7 +26,7 @@ enum class MessageType : uint16_t {
 
 template <typename T>
 struct ExternalFields {};
- 
+
 template <>
 struct ExternalFields<Vector2> {
     static constexpr auto get(auto& v) { return std::tie(v.x, v.y); }
@@ -87,7 +93,7 @@ constexpr void encode(Writer& w, const T& value) {
         static_assert(sizeof(T) == 0, "not encodable: add a fields() list or an ExternalFields specialization");
     }
 }
- 
+
 template <typename T>
 constexpr void decode(Reader& r, T& value) {
     if constexpr (Serializable<T> || DeserializableRange<T>) {
@@ -195,7 +201,8 @@ struct Packet {
 
 template <Message M>
 Packet(M) -> Packet<M>; // клодік сказав, шо мало б без цього всюди воркати, але clang може і не справитись
- 
+// clang 17+, GCC 11+ and MSVC 19.27+
+
 
 struct IntentMessage {
     static constexpr MessageType TYPE = MessageType::INTENT;

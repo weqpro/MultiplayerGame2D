@@ -106,7 +106,7 @@ public:
     [[nodiscard]] constexpr T read() noexcept {
         using U = uint_for<T>;
 
-        if (pos_ + sizeof(T) > buf_.size() ) { failed_ = true; }
+        if (sizeof(T) > buf_.size() - pos_ ) { failed_ = true; }
         if (failed_) { return T{}; }
 
         U bits = 0;

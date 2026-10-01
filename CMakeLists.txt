@@ -48,7 +48,6 @@ find_package(Threads REQUIRED)
 add_library(GameShared STATIC
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
-  src/shared/Messages.cpp
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
