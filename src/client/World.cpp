@@ -4,25 +4,34 @@
 #include <iostream>
 
 #include "shared/Serialization.h"
+#include "shared/Messages.h"
 
 namespace client {
 
 void World::update(float dt) {
     auto intent = playerController_.getIntent();
 
-    std::span<std::byte> buf{};
-    shared::Writer writer(buf);
-    writer.write(intent.input.x);
-    writer.write(intent.input.y);
+    shared::Packet<shared::IntentMessage> packet {
+        .message = {intent.input}
+    };
 
-    if (!writer.ok()) {
+    auto bytes = packet.serialize();
+
+    if (!bytes) {
         //TODO: handle
-        std::cerr << "Writer not ok" << std::endl;
-        std::cerr << "Written: " << writer.written() << std::endl;
+        std::cerr << "Intent message serialize failed" << std::endl;
+        return;
     }
 
-    messageBuf = buf;
+    messageBuf = bytes.value();
 }
 
+void World::joinPlayer(Player player, size_t playerId) {
+    players_[playerId] = player;
+}
+
+void World::removePlayer(size_t playerId) {
+    players_.erase(playerId);
+}
 
 }

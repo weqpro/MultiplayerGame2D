@@ -7,6 +7,7 @@
 #include <limits>
 #include <concepts>
 #include <cstdint>
+#include <ranges>
 #include <type_traits>
 
 namespace shared {
@@ -18,7 +19,24 @@ template <typename T>
 concept Serializable =
     (std::integral<T> || std::floating_point<T> || std::is_enum_v<T>) &&
     !std::same_as<std::remove_cv_t<T>, bool> &&
-    (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8); // NOTE: check bool
+    (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8);
+
+using RangeSizeT = std::uint16_t;
+
+template <typename R>
+concept SerializableRange =
+    std::ranges::contiguous_range<R> &&
+    std::ranges::sized_range<R> &&
+    Serializable<std::ranges::range_value_t<R>>;
+
+template <typename R>
+concept DeserializableRange =
+    SerializableRange<R> &&
+    std::default_initializable<R> &&
+    requires(R& c, std::size_t n, std::ranges::range_value_t<R> v) {
+        c.reserve(n);
+        c.push_back(v);
+    };
 
 namespace detail {
 
@@ -39,7 +57,7 @@ public:
 
     template <Serializable T>
     constexpr void write(T value) noexcept {
-        if (pos_ + sizeof(T) > buf_.size() ) { failed_ = true; }
+        if (sizeof(T) > buf_.size() - pos_) { failed_ = true; }
         if (failed_) { return; }
 
         const auto bits = std::bit_cast<uint_for<T>>(value);
@@ -51,6 +69,26 @@ public:
         pos_ += sizeof(T);
     }
 
+    template <SerializableRange R>
+    constexpr void write(R&& range) noexcept {
+        std::span values{range};
+
+        constexpr auto elementSize = sizeof(std::ranges::range_value_t<R>);
+
+        if (values.size() > std::numeric_limits<RangeSizeT>::max() ||
+            sizeof(RangeSizeT) + values.size() * elementSize > buf_.size() - pos_) {
+            failed_ = true;
+            return;
+        }
+
+        auto size = static_cast<RangeSizeT>(values.size());
+        write(size);
+        for (const auto& v : values) {
+            write(v);
+        }
+    }
+
+    constexpr void fail() noexcept { failed_ = true; }
     [[nodiscard]] constexpr bool ok() const noexcept { return !failed_; }
     [[nodiscard]] constexpr std::size_t written() const noexcept { return pos_; }
 
@@ -68,7 +106,7 @@ public:
     [[nodiscard]] constexpr T read() noexcept {
         using U = uint_for<T>;
 
-        if (pos_ + sizeof(T) > buf_.size() ) { failed_ = true; }
+        if (sizeof(T) > buf_.size() - pos_ ) { failed_ = true; }
         if (failed_) { return T{}; }
 
         U bits = 0;
@@ -81,6 +119,25 @@ public:
         return std::bit_cast<T>(bits);
     }
 
+    template <DeserializableRange R>
+    [[nodiscard]] constexpr R read() {
+        using T = std::ranges::range_value_t<R>;
+
+        const auto n = read<RangeSizeT>();
+        if (failed_ || n * sizeof(T) > remaining()) {
+            failed_ = true;
+            return R{};
+        }
+
+        R out;
+        out.reserve(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            out.push_back(read<T>());
+        }
+        return out;
+    }
+
+    constexpr void fail() noexcept { failed_ = true; }
     [[nodiscard]] constexpr bool ok() const noexcept { return !failed_; }
     [[nodiscard]] constexpr size_t remaining() const noexcept { return buf_.size() - pos_; }
 

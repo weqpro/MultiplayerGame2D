@@ -66,8 +66,18 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
+
+    InitWindow(screenWidth, screenHeight, "client");
+
+    SetTargetFPS(240);
+
     client::ClientApp app(std::move(host), port, kPeerCount);
     app.run(tps);
 
+    CloseWindow();
     return EXIT_SUCCESS;
 }

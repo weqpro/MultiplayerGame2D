@@ -1,9 +1,9 @@
 #ifndef WORLD__H_
 #define WORLD__H_
 
-#include <span>
-
 #include <raylib.h>
+#include <unordered_map>
+#include <vector>
 
 #include "client/Player.h"
 
@@ -13,8 +13,11 @@ class World {
 public:
     World() : playerController_ {} {};
     void update(float dt);
+    void joinPlayer(Player player, size_t playerId);
+    void removePlayer(size_t playerId);
 
-    std::span<std::byte> messageBuf;
+    std::vector<std::byte> messageBuf;
+    std::unordered_map<size_t, Player> players_;
 private:
     Controller playerController_ {};
 };

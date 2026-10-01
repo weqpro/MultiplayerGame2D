@@ -17,16 +17,16 @@ void WebServerContext::onPeerConnected(ENetPeer* peer) {
 
     std::cout << "Client connected from " << ip << ":" << peer->address.port << "\n";
 
-    peer->data = new PeerSession{ "Client_" + std::to_string(peer->connectID) };
+    //peer->data = new PeerSession{ "Client_" + std::to_string(peer->connectID) };
 }
 
 void WebServerContext::onPeerDisconnected(ENetPeer* peer) {
-    auto* session = static_cast<PeerSession*>(peer->data);
-    if (session) {
-        std::cout << session->client_id << " disconnected.\n";
-        delete session;
-        peer->data = nullptr;
-    }
+    // auto* session = static_cast<PeerSession*>(peer->data);
+    // if (session) {
+    //     std::cout << session->client_id << " disconnected.\n";
+    //     delete session;
+    //     //peer->data = nullptr;
+    // }
 }
 
 } // namespace server

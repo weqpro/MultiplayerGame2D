@@ -1,7 +1,20 @@
 #include "server/Player.h"
+#include <iterator>
 #include <raylib.h>
 
 namespace server {
+namespace {
+
+constexpr Color kPlayerColors[] = {
+    DARKGRAY, MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, DARKBROWN
+};
+
+} // namespace
+
+Color randomPlayerColor() {
+    const int last = static_cast<int>(std::size(kPlayerColors)) - 1;
+    return kPlayerColors[GetRandomValue(0, last)];
+}
 
 Intent Controller::getIntent() {
     Intent intent;
@@ -37,7 +50,7 @@ void Player::setIntent(Intent i) {
     ctr->setIntent(i);
 }
 void Body::render() const {
-    DrawCircleV(pos, 10.0f, LIME);
+    DrawCircleV(pos, 10.0f, color);
 }
 
 }

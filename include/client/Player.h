@@ -13,12 +13,17 @@ struct Intent {
 struct Body {
     Vector2 pos {NAN, NAN};
     float speed = 5.0f;
+    Color color = MAROON;
     void render() const;
 };
 
 class Controller {
 public:
     Intent getIntent();
+};
+
+struct Player {
+    Body body;
 };
 
 }

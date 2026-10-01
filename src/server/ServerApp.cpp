@@ -8,6 +8,7 @@
 #include <string_view>
 #include <raylib.h>
 
+#include "shared/Messages.h"
 #include "shared/Serialization.h"
 
 namespace server {
@@ -32,7 +33,7 @@ bool ServerApp::onStartUp() {
     auto ctr = std::make_unique<Controller>();
     Player *player = new Player{std::move(ctr), {67.0f, 67.0f}};
 
-    world_.joinPlayer(player);
+    world_.joinPlayer(player, 0);
     renderer_.addBody(&player->body);
 
     return true;
@@ -72,30 +73,41 @@ void ServerApp::onConnect(ENetPeer* peer) {
     };
     auto ctrl = std::make_unique<ClientController>();
     Player *player = new Player{std::move(ctrl), spawnPoint};
-    size_t *id = new size_t{world_.joinPlayer(player)}; //NOTE: do smth about it
-    peer->data = id;
+    static size_t playerId = 1;
+    world_.joinPlayer(player, playerId);
+    renderer_.addBody(&player->body);
+    peer->data = new size_t{playerId}; //NOTE: do smth about it
+    playerId++;
     std::cout << "Peer connected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " total).\n";
 }
 
 void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
-    const std::span<const std::byte> payload(
-        reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-
-    const std::string_view text(reinterpret_cast<const char*>(packet->data),
-                                packet->dataLength);
-
-    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength);
-    shared::Reader reader{data};
-
-    auto posX = reader.read<float>();
-    auto posY = reader.read<float>();
-
-    std::cout << "Unread " << reader.remaining()
-              << " bytes on channel " << static_cast<int>(channelID)
-              << ": " << text << '\n';
-
-    context_.send(peer, payload, channelID);
+    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength); auto mType = shared::peek_type(data);
+    if (!mType) {
+        //TODO: handle 
+        std::cout << "Invalid type" << std::endl;
+        return;
+    }
+    switch (mType.value()) {
+        case shared::MessageType::INTENT: {
+            auto packet = shared::Packet<shared::IntentMessage>::deserialize(data);
+            if (!packet) {
+                //TODO: handle
+                std::cout << "Deserialize failed" << std::endl;
+                break;
+            }
+            if (!peer->data) {
+                break;
+            }
+            auto m = packet->message.intent;
+            size_t playerId = *static_cast<size_t*>(peer->data);
+            world_.setClientPlayerIntent(playerId, {m});
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void ServerApp::onDisconnect(ENetPeer* peer) {
@@ -105,19 +117,27 @@ void ServerApp::onDisconnect(ENetPeer* peer) {
     std::cout << "Peer disconnected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " remaining).\n";
 
+    if (!peer->data) {
+        return;
+    }
     size_t playerId = *static_cast<size_t *>(peer->data);
 
+    if (Player* player = world_.getPlayer(playerId)) {
+        renderer_.removeBody(&player->body);
+    }
     world_.removePlayer(playerId);
     delete static_cast<size_t *>(peer->data);
+    peer->data = nullptr;
 }
 
 void ServerApp::onTick(uint64_t tick) {
     if (WindowShouldClose()) {
         stop();
     }
-    world_.update(0.1f);
-    renderer_.render();
+    world_.update(1.0f/TPS);
 
+    context_.broadcast(world_.messageBuf, 0, 0);
+    renderer_.render();
 }
 
 } // namespace server

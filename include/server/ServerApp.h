@@ -30,6 +30,7 @@ public:
 
     size_t connectedPeers() const noexcept { return connectedPeers_; }
 
+    static constexpr size_t TPS = 120;
 private:
     bool onStartUp();
 

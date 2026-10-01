@@ -24,7 +24,7 @@ Intent Controller::getIntent() {
 
 void Body::render() const {
     if (std::isnan(pos.x) || std::isnan(pos.y)) return;
-    DrawCircleV(pos, 10.0f, MAROON);
+    DrawCircleV(pos, 10.0f, color);
 }
 
 }
