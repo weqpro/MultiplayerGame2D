@@ -9,6 +9,9 @@
 #include "shared/AppBase.h"
 #include "server/WebServerContext.h"
 
+#include "server/World.h"
+#include "server/Renderer.h"
+
 namespace server {
 
 class ServerApp : public shared::AppBase<ServerApp, WebServerContext> {
@@ -27,8 +30,11 @@ public:
 
     size_t connectedPeers() const noexcept { return connectedPeers_; }
 
+    static constexpr size_t TPS = 120;
 private:
     bool onStartUp();
+
+    void onTick(uint64_t /*tick*/);
 
     void onShutDown();
 
@@ -37,6 +43,9 @@ private:
     uint16_t port_;
     size_t peerCount_;
     size_t connectedPeers_{0};
+
+    World world_ {};
+    Renderer renderer_ {};
 };
 
 } // namespace server

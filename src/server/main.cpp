@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <raylib.h>
 #include <string_view>
 
 #include <enet/enet.h>
@@ -13,7 +14,7 @@ namespace {
 
 constexpr uint16_t kDefaultPort = 1234;
 constexpr size_t kDefaultPeers = 32;
-constexpr uint32_t kDefaultTPS = 20;
+constexpr uint32_t kDefaultTPS = 120;
 
 template <typename T>
 bool parseArg(std::string_view text, T& out) {
@@ -61,6 +62,15 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
+
+    InitWindow(screenWidth, screenHeight, "server");
+
+    SetTargetFPS(240);
+
     const shared::ENetGuard enet;
     if (!enet) {
         std::cerr << "Failed to initialize ENet.\n";
@@ -69,6 +79,8 @@ int main(int argc, char** argv) {
 
     server::ServerApp app(port, peers);
     app.run(tps);
+
+    CloseWindow();
 
     return EXIT_SUCCESS;
 }
