@@ -99,6 +99,7 @@ void ClientApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID)
             renderer_->bodies_ = {};
             renderer_->bodies_.reserve(players.players.size());
             for (auto& player : players.players) {
+                world_->players_[player.id] = {};
                 world_->players_[player.id]->body.pos = player.body.pos;
                 renderer_->addBody(&world_->players_[player.id]->body);
             }

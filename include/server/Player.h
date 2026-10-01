@@ -13,7 +13,7 @@ struct Intent {
 
 struct Body {
     Vector2 pos {0.0f, 0.0f};
-    float speed = 5.0f;
+    float speed = 50.0f;
     void render() const;
 };
 

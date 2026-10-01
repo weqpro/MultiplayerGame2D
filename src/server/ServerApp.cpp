@@ -75,8 +75,8 @@ void ServerApp::onConnect(ENetPeer* peer) {
     Player *player = new Player{std::move(ctrl), spawnPoint};
     static size_t playerId = 1;
     world_.joinPlayer(player, playerId);
-    playerId++;
     renderer_.addBody(&player->body);
+    playerId++;
     peer->data = new size_t{playerId}; //NOTE: do smth about it
     std::cout << "Peer connected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " total).\n";
@@ -117,6 +117,7 @@ void ServerApp::onDisconnect(ENetPeer* peer) {
     size_t playerId = *static_cast<size_t *>(peer->data);
 
     world_.removePlayer(playerId);
+    // renderer_.removeBody(playerId); TODO: handle
     delete static_cast<size_t *>(peer->data);
 }
 
