@@ -8,6 +8,7 @@
 #include <string_view>
 #include <raylib.h>
 
+#include "shared/Messages.h"
 #include "shared/Serialization.h"
 
 namespace server {
@@ -79,23 +80,24 @@ void ServerApp::onConnect(ENetPeer* peer) {
 }
 
 void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
-    const std::span<const std::byte> payload(
-        reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-
-    const std::string_view text(reinterpret_cast<const char*>(packet->data),
-                                packet->dataLength);
-
     std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength);
-    shared::Reader reader{data};
-
-    auto posX = reader.read<float>();
-    auto posY = reader.read<float>();
-
-    std::cout << "Unread " << reader.remaining()
-              << " bytes on channel " << static_cast<int>(channelID)
-              << ": " << text << '\n';
-
-    context_.send(peer, payload, channelID);
+    auto mType = shared::peek_type(data);
+    if (!mType) {
+        //TODO: handle 
+        std::cout << "Invalid type" << std::endl;
+        return;
+    }
+    switch (mType.value()) {
+        case shared::MessageType::INTENT: {
+            auto packet = shared::Packet<shared::IntentMessage>::deserialize(data);
+            auto m = packet->message.intent;
+            size_t playerId = *static_cast<size_t*>(peer->data);
+            world_.setClientPlayerIntent(playerId, {m});
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void ServerApp::onDisconnect(ENetPeer* peer) {

@@ -76,7 +76,7 @@ public:
         constexpr auto elementSize = sizeof(std::ranges::range_value_t<R>);
 
         if (values.size() > std::numeric_limits<RangeSizeT>::max() ||
-            sizeof(RangeSizeT) + values.size() * elementSize  > buf_.size() - pos_) {
+            sizeof(RangeSizeT) + values.size() * elementSize > buf_.size() - pos_) {
             failed_ = true;
             return;
         }
