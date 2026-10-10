@@ -7,10 +7,6 @@
 
 namespace server {
 
-struct Intent {
-    Vector2 input {0.0, 0.0};
-};
-
 struct Body {
     Vector2 pos {0.0f, 0.0f};
     float speed = 50.0f;

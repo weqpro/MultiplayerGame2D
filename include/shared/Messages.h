@@ -27,15 +27,6 @@ enum class MessageType : uint16_t {
 template <typename T>
 struct ExternalFields {};
 
-template <>
-struct ExternalFields<Vector2> {
-    static constexpr auto get(auto& v) { return std::tie(v.x, v.y); }
-};
-
-template <>
-struct ExternalFields<Color> {
-    static constexpr auto get(auto& c) { return std::tie(c.r, c.g, c.b, c.a); }
-};
  
 template <typename T>
 concept HasMemberFields = requires(T& t, const T& ct) {
@@ -82,7 +73,6 @@ constexpr void encode(Writer& w, const T& value) {
     if constexpr (Serializable<T> || SerializableRange<const T&>) {
         w.write(value);
     } else if constexpr (Structured<T>) {
-        // fields are written strictly left to right.
         std::apply([&w](const auto&... f) { (encode(w, f), ...); }, fields_of(value));
     } else if constexpr (StructuredRange<T>) {
         const auto n = std::ranges::size(value);
@@ -166,12 +156,10 @@ struct Packet {
  
     M message;
  
-    /// Exact encoded size in bytes, header included.
     [[nodiscard]] constexpr std::size_t size() const {
         return HEADER_SIZE + encoded_size(message);
     }
  
-    /// Writes the packet into `out`. Returns the bytes written, or 0 on failure.
     [[nodiscard]] constexpr std::size_t serialize(std::span<std::byte> out) const {
         Writer w{out};
         w.write(TYPE);
@@ -179,7 +167,6 @@ struct Packet {
         return w.ok() ? w.written() : 0;
     }
  
-    /// Allocates a buffer of exactly size() bytes.
     [[nodiscard]] std::optional<std::vector<std::byte>> serialize() const {
         std::vector<std::byte> buf(size());
         if (serialize(std::span{buf}) == 0) {
@@ -188,7 +175,6 @@ struct Packet {
         return buf;
     }
  
-    /// Fails if the type doesn't match M, or on truncation or trailing bytes.
     [[nodiscard]] static constexpr std::optional<Packet> deserialize(std::span<const std::byte> bytes) {
         Reader r{bytes};
         const auto type = r.read<MessageType>();
@@ -207,37 +193,6 @@ struct Packet {
 template <Message M>
 Packet(M) -> Packet<M>; // клодік сказав, шо мало б без цього всюди воркати, але clang може і не справитись
 // clang 17+, GCC 11+ and MSVC 19.27+
-
-
-struct IntentMessage {
-    static constexpr MessageType TYPE = MessageType::INTENT;
- 
-    Vector2 intent{};
- 
-    static constexpr auto fields(auto& self) { return std::tie(self.intent); }
-};
- 
-struct Body {
-    Vector2 pos{};
-    Color color{};
-
-    static constexpr auto fields(auto& self) { return std::tie(self.pos, self.color); }
-};
-
-struct Player {
-    std::uint32_t id{};
-    Body body;
-    
-    static constexpr auto fields(auto& self) { return std::tie(self.id, self.body); }
-};
- 
-struct PlayersMessage {
-    static constexpr MessageType TYPE = MessageType::PLAYERS;
- 
-    std::vector<Player> players;
- 
-    static constexpr auto fields(auto& self) { return std::tie(self.players); }
-};
 
 }
 
