@@ -3,6 +3,7 @@
 namespace server{
 
 void LocalPlayerController::update() {
+    intent_ = {};
     if (IsKeyDown(KEY_W)) {
         intent_.input.y -= 1.0f;
     } 
