@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "shared/Messages.h"
+#include "shared/types/Player.h"
 
 namespace client {
 namespace {

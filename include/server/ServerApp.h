@@ -10,7 +10,7 @@
 #include "server/WebServerContext.h"
 
 #include "server/World.h"
-#include "server/Renderer.h"
+#include "shared/Renderer.h"
 
 namespace server {
 
@@ -44,8 +44,8 @@ private:
     size_t peerCount_;
     size_t connectedPeers_{0};
 
-    World world_ {};
-    Renderer renderer_ {};
+    World world_ {entities_};
+    shared::Renderer renderer_ {entities_};
 };
 
 } // namespace server

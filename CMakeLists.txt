@@ -48,6 +48,7 @@ find_package(Threads REQUIRED)
 add_library(GameShared STATIC
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
+  src/shared/Renderer.cpp
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -56,23 +57,22 @@ target_link_libraries(GameShared PUBLIC enet raylib)
 # -----------------------------------------------------------------------------
 # 2. Client Executable
 # -----------------------------------------------------------------------------
-add_executable(MultiplayerGame2D_Client
-  src/client/ClientApp.cpp
-  src/client/Player.cpp
-  src/client/Renderer.cpp
-  src/client/WebClientContext.cpp
-  src/client/World.cpp
-  src/client/main.cpp
-)
-
-target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
+# add_executable(MultiplayerGame2D_Client
+#   src/client/ClientApp.cpp
+#   src/client/Player.cpp
+#   src/client/WebClientContext.cpp
+#   src/client/World.cpp
+#   src/client/main.cpp
+# )
+#
+# target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
 
 # -----------------------------------------------------------------------------
 # 3. Server Executable
 # -----------------------------------------------------------------------------
 add_executable(MultiplayerGame2D_Server
-  src/server/Player.cpp
-  src/server/Renderer.cpp
+  src/server/controllers/LocalPlayerController.cpp
+  src/server/controllers/RemotePlayerController.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp
   src/server/World.cpp

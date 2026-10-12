@@ -8,7 +8,7 @@
 
 namespace shared {
 
-struct Player {
+struct PlayerDTO {
     std::uint32_t id{};
     Body body;
     
