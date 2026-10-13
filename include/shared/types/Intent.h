@@ -2,24 +2,18 @@
 #define SHARED_TYPES_INTENT_H
 
 #include <raylib.h>
-
-#include "shared/Messages.h"
+#include <tuple>
 
 namespace shared {
 
 struct Intent {
-    Vector2 input {0.0, 0.0};
+    Vector2 move{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.move); }
 };
 
-struct IntentMessage {
-    static constexpr MessageType TYPE = MessageType::INTENT;
- 
-    Vector2 intent{};
- 
-    static constexpr auto fields(auto& self) { return std::tie(self.intent); }
-};
+[[nodiscard]] Intent sanitize(Intent intent) noexcept;
 
 }
 
 #endif
-

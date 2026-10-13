@@ -1,25 +1,72 @@
 #ifndef SERVER_WORLD_H
 #define SERVER_WORLD_H
 
+#include <cassert>
+#include <concepts>
+#include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
-#include <cstddef>
 
-#include "server/Player.h"
+#include "shared/contracts/IController.h"
+#include "shared/entities/Agent.h"
+#include "shared/entities/EntityRegistry.h"
+#include "shared/types/Ids.h"
 
 namespace server {
 
 class World {
 public:
-    void update(float dt);
-    void joinPlayer(Player *player, size_t playerId);
-    void removePlayer(size_t playerId);
-    Player* getPlayer(size_t playerId);
+    struct Events {
+        std::vector<shared::EntityId> spawned;
+        std::vector<shared::EntityId> despawned;
+    };
 
-    void setClientPlayerIntent(size_t playerId, Intent intent);
-    std::vector<std::byte> messageBuf;
+    template <std::derived_from<shared::Entity> T, typename... Args>
+    T& spawn(Args&&... args) {
+        auto entity = std::make_unique<T>(nextId_++, std::forward<Args>(args)...);
+        T& ref = *entity;
+        registry_.insert(std::move(entity));
+        events_.spawned.push_back(ref.id());
+        return ref;
+    }
+
+    // Also drops the entity's controller, if it has one.
+    void despawn(shared::EntityId id);
+
+    template <std::derived_from<shared::IController> C, typename... Args>
+    C& possess(shared::Agent& pawn, Args&&... args) {
+        assert(registry_.find(pawn.id()) == &pawn);
+        auto controller = std::make_unique<C>(std::forward<Args>(args)...);
+        C& ref = *controller;
+        possessions_[pawn.id()] = Possession{&pawn, std::move(controller)};
+        return ref;
+    }
+
+    void release(shared::EntityId pawn);
+
+    template <std::derived_from<shared::IController> C>
+    [[nodiscard]] C* controllerOf(shared::EntityId pawn) noexcept {
+        const auto it = possessions_.find(pawn);
+        return it == possessions_.end() ? nullptr : dynamic_cast<C*>(it->second.controller.get());
+    }
+
+    void update(float dt);
+
+    [[nodiscard]] Events drainEvents();
+
+    [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
+
 private:
-    std::unordered_map<size_t, Player*> players_ {};
+    struct Possession {
+        shared::Agent* pawn;
+        std::unique_ptr<shared::IController> controller;
+    };
+
+    shared::EntityRegistry registry_;
+    std::unordered_map<shared::EntityId, Possession> possessions_;
+    shared::EntityId nextId_{1};
+    Events events_;
 };
 
 }

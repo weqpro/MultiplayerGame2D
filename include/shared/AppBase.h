@@ -25,6 +25,7 @@ public:
         if (targetTPS == 0) {
             targetTPS = 1;
         }
+        tickRate_ = targetTPS;
 
         const auto tickInterval =
             std::chrono::duration_cast<Clock::duration>(std::chrono::seconds(1)) / targetTPS;
@@ -65,6 +66,10 @@ public:
 
     uint64_t tickCount() const noexcept { return tick_; }
 
+    uint32_t tickRate() const noexcept { return tickRate_; }
+
+    float tickSeconds() const noexcept { return 1.0f / static_cast<float>(tickRate_); }
+
     Context& context() noexcept { return context_; }
 
     const Context& context() const noexcept { return context_; }
@@ -98,6 +103,7 @@ private:
     const Derived& self() const noexcept { return static_cast<const Derived&>(*this); }
 
     uint64_t tick_{0};
+    uint32_t tickRate_{60};
     bool running_{false};
 };
 

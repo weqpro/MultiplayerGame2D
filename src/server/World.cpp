@@ -1,65 +1,34 @@
 #include "server/World.h"
-#include <raylib.h>
-#include <vector>
-#include <iostream>
 
-#include "shared/Messages.h"
+#include <utility>
 
 namespace server {
 
+void World::despawn(shared::EntityId id) {
+    possessions_.erase(id);
+    if (registry_.erase(id)) {
+        events_.despawned.push_back(id);
+    }
+}
+
+void World::release(shared::EntityId pawn) {
+    possessions_.erase(pawn);
+}
+
 void World::update(float dt) {
-    std::vector<shared::Player> players;
-    for (auto& [playerId, player]: players_) {
-        auto playerIntent = player->getIntent();
-        player->body.pos.x += playerIntent.input.x * player->body.speed * dt;
-        player->body.pos.y += playerIntent.input.y * player->body.speed * dt;
-        players.push_back({
-            .id = static_cast<uint32_t>(playerId), 
-            .body = {
-                .pos = player->body.pos,
-                .color = player->body.color
-            }
-        });
-    };
-
-    shared::Packet<shared::PlayersMessage> pack {
-        .message = {
-            .players = players
-        }
-    };
-    auto bytes = pack.serialize();
-    if (!bytes) {
-        // TODO: handle
-        std::cerr << "Could not serialize players" << std::endl;
-        return;
+    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions;
+    decisions.reserve(possessions_.size());
+    for (auto& [id, possession] : possessions_) {
+        const shared::ControlContext ctx{*possession.pawn, registry_, dt};
+        decisions.emplace_back(possession.pawn, possession.controller->decide(ctx));
     }
-    messageBuf = bytes.value();
-
-}
-
-void World::joinPlayer(Player *player, size_t playerId) {
-    players_[playerId] = player;
-}
-
-void World::removePlayer(size_t playerId) {
-    auto it = players_.find(playerId);
-    if (it == players_.end()) {
-        return;
-    }
-    delete it->second;
-    players_.erase(it);
-}
-
-Player* World::getPlayer(size_t playerId) {
-    auto it = players_.find(playerId);
-    return it == players_.end() ? nullptr : it->second;
-}
-
-void World::setClientPlayerIntent(size_t playerId, Intent intent) {
-    if (Player* player = getPlayer(playerId)) {
-        player->setIntent(intent);
+    for (auto& [pawn, intent] : decisions) {
+        pawn->act(intent, dt);
     }
 }
 
+World::Events World::drainEvents() {
+    return std::exchange(events_, {});
+}
 
 }

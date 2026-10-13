@@ -1,37 +1,32 @@
 #include "client/ClientApp.h"
-#include "client/World.h"
 
 #include <cstddef>
 #include <enet/enet.h>
 #include <iostream>
-#include <memory>
 #include <span>
 #include <string>
 #include <utility>
 
 #include "shared/Messages.h"
+#include "shared/Protocol.h"
 
 namespace client {
 namespace {
 
-constexpr uint32_t kShutdownDrainStepMs = 50;
+constexpr uint32_t SHUTDOWN_DRAIN_MS = 50;
 
-constexpr int kShutdownDrainSteps = 20;
+constexpr int SHUTDOWN_DRAIN_STEPS = 20;
 
 } // namespace
 
 ClientApp::ClientApp(uint16_t port, size_t peerCount)
     : ClientApp("127.0.0.1", port, peerCount) {
-    world_ = std::make_unique<World>();
-    renderer_ = std::make_unique<Renderer>();
 }
 
 ClientApp::ClientApp(std::string hostName, uint16_t port, size_t peerCount)
     : Base(peerCount),
       hostName_(std::move(hostName)),
       port_(port) {
-    world_ = std::make_unique<World>();
-    renderer_ = std::make_unique<Renderer>();
 }
 
 bool ClientApp::onStartUp() {
@@ -46,25 +41,24 @@ bool ClientApp::onStartUp() {
     return true;
 }
 
-void ClientApp::onTick(uint64_t tick) {
+void ClientApp::onTick(uint64_t /*tick*/) {
     if (WindowShouldClose()) {
         stop();
     }
-    if (!peer_ || peer_->state != ENET_PEER_STATE_CONNECTED) {
-        return;
+    if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
+        if (const auto intent = world_.sampleIntent(tickSeconds())) {
+            context_.send(peer_, *intent);
+        }
     }
-
-    world_->update(1.0f/TPS);
-    context_.send(peer_, world_->messageBuf, 0,0);
-    renderer_->render();
+    renderer_.render(world_.entities(), world_.pawn());
 }
 
 void ClientApp::onShutDown() {
     if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
         enet_peer_disconnect(peer_, 0);
 
-        for (int i = 0; i < kShutdownDrainSteps && peer_; ++i) {
-            service(kShutdownDrainStepMs);
+        for (int i = 0; i < SHUTDOWN_DRAIN_STEPS && peer_; ++i) {
+            service(SHUTDOWN_DRAIN_MS);
         }
 
         if (peer_) {
@@ -78,34 +72,38 @@ void ClientApp::onConnect(ENetPeer* /*peer*/) {
     std::cout << "Connected to server.\n";
 }
 
-void ClientApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
-    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength); auto mType = shared::peek_type(data);
-    if (!mType) {
-        //TODO: handle 
+template <shared::Message M>
+void ClientApp::dispatch(std::span<const std::byte> data) {
+    const auto packet = shared::Packet<M>::deserialize(data);
+    if (!packet) {
+        //TODO: handle
+        std::cout << "Deserialize failed for message type " << static_cast<int>(M::TYPE) << std::endl;
+        return;
+    }
+    world_.apply(packet->message);
+}
+
+void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*channelID*/) {
+    const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
+    const auto type = shared::peek_type(data);
+    if (!type) {
+        //TODO: handle
         std::cout << "Invalid type" << std::endl;
         return;
     }
-    switch (mType.value()) {
-        case shared::MessageType::PLAYERS: {
-            auto packet = shared::Packet<shared::PlayersMessage>::deserialize(data);
-            if (!packet) {
-                //TODO: handle
-                std::cout << "Deserialize failed" << std::endl;
-                break;
-            }
-            auto players = packet->message;
-            world_->players_.clear();
-            renderer_->bodies_.clear();
-            for (auto& player : players.players) {
-                auto& local = world_->players_[player.id];
-                local.body.pos = player.body.pos;
-                local.body.color = player.body.color;
-            }
-            for (auto& [id, player] : world_->players_) {
-                renderer_->addBody(&player.body);
-            }
+    switch (*type) {
+        case shared::MessageType::POSSESS:
+            dispatch<shared::PossessMessage>(data);
             break;
-        }
+        case shared::MessageType::SPAWN:
+            dispatch<shared::SpawnMessage>(data);
+            break;
+        case shared::MessageType::DESPAWN:
+            dispatch<shared::DespawnMessage>(data);
+            break;
+        case shared::MessageType::SNAPSHOT:
+            dispatch<shared::SnapshotMessage>(data);
+            break;
         default:
             break;
     }

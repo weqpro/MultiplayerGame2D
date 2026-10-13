@@ -1,22 +1,43 @@
 #include "server/ServerApp.h"
-#include "server/Player.h"
 
 #include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <span>
-#include <memory>
-#include <string_view>
+#include <string>
 #include <raylib.h>
 
+#include "server/controllers/NetworkController.h"
+#include "server/controllers/WanderController.h"
 #include "shared/Messages.h"
-#include "shared/Serialization.h"
+#include "shared/Protocol.h"
+#include "shared/controllers/KeyboardController.h"
+#include "shared/entities/NPC.h"
+#include "shared/entities/Player.h"
 
 namespace server {
 namespace {
 
-constexpr uint32_t kShutdownDrainStepMs = 50;
+constexpr uint32_t SHUTDOWN_DRAN_STEPS_MS = 50;
 
-constexpr int kShutdownDrainSteps = 20;
+constexpr int SHUTDOWN_DRAIN_STEPS = 20;
+
+constexpr Color PLAYER_COLORS[] = {
+    DARKGRAY, MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, DARKBROWN
+};
+
+constexpr int NPC_COUNT = 3;
+
+constexpr float NPC_LEASH = 120.0f;
+
+Color randomPlayerColor() {
+    const int last = static_cast<int>(std::size(PLAYER_COLORS)) - 1;
+    return PLAYER_COLORS[GetRandomValue(0, last)];
+}
+
+Vector2 randomPoint(int minX, int maxX, int minY, int maxY) {
+    return {static_cast<float>(GetRandomValue(minX, maxX)), static_cast<float>(GetRandomValue(minY, maxY))};
+}
 
 } // namespace
 
@@ -29,13 +50,18 @@ bool ServerApp::onStartUp() {
     std::cout << "Server listening on port " << port_
               << " (up to " << peerCount_ << " peers).\n";
 
+    auto& host = world_.spawn<shared::Player>(shared::Body{.pos = {67.0f, 67.0f}},
+                                              shared::Appearance{.color = randomPlayerColor()},
+                                              "host");
+    world_.possess<shared::KeyboardController>(host);
+    hostPawn_ = host.id();
 
-    auto ctr = std::make_unique<Controller>();
-    Player *player = new Player{std::move(ctr), {67.0f, 67.0f}};
-
-    world_.joinPlayer(player, 0);
-    renderer_.addBody(&player->body);
-
+    for (int i = 0; i < NPC_COUNT; ++i) {
+        const Vector2 home = randomPoint(250, 550, 120, 330);
+        auto& npc = world_.spawn<shared::NPC>(shared::Body{.pos = home},
+                                              shared::Appearance{.color = GRAY, .radius = 7.0f});
+        world_.possess<WanderController>(npc, home, NPC_LEASH);
+    }
     return true;
 }
 
@@ -53,8 +79,8 @@ void ServerApp::onShutDown() {
         }
     }
 
-    for (int i = 0; i < kShutdownDrainSteps && connectedPeers_ > 0; ++i) {
-        service(kShutdownDrainStepMs);
+    for (int i = 0; i < SHUTDOWN_DRAIN_STEPS && connectedPeers_ > 0; ++i) {
+        service(SHUTDOWN_DRAN_STEPS_MS);
     }
 
     for (ENetPeer* peer = host->peers; peer < host->peers + host->peerCount; ++peer) {
@@ -67,42 +93,41 @@ void ServerApp::onShutDown() {
 
 void ServerApp::onConnect(ENetPeer* peer) {
     ++connectedPeers_;
-    Vector2 spawnPoint {
-        static_cast<float>(GetRandomValue(100, 200)),
-        static_cast<float>(GetRandomValue(100, 200))
-    };
-    auto ctrl = std::make_unique<ClientController>();
-    Player *player = new Player{std::move(ctrl), spawnPoint};
-    static size_t playerId = 1;
-    world_.joinPlayer(player, playerId);
-    renderer_.addBody(&player->body);
-    peer->data = new size_t{playerId}; //NOTE: do smth about it
-    playerId++;
+
+    auto& pawn = world_.spawn<shared::Player>(shared::Body{.pos = randomPoint(100, 200, 100, 200)},
+                                              shared::Appearance{.color = randomPlayerColor()},
+                                              "n n " + std::to_string(peer->incomingPeerID + 1));
+    world_.possess<NetworkController>(pawn);
+    sessions_[peer] = pawn.id();
+    replicator_.join(peer, pawn.id());
+
     std::cout << "Peer connected from " << peer->address.host << ":" << peer->address.port
-              << " (" << connectedPeers_ << " total).\n";
+              << " as entity " << pawn.id() << " (" << connectedPeers_ << " total).\n";
 }
 
-void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t channelID) {
-    std::span<std::byte> data(reinterpret_cast<std::byte*>(packet->data), packet->dataLength); auto mType = shared::peek_type(data);
-    if (!mType) {
-        //TODO: handle 
+void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t /*channelID*/) {
+    const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
+    const auto type = shared::peek_type(data);
+    if (!type) {
+        //TODO: handle
         std::cout << "Invalid type" << std::endl;
         return;
     }
-    switch (mType.value()) {
+    switch (*type) {
         case shared::MessageType::INTENT: {
-            auto packet = shared::Packet<shared::IntentMessage>::deserialize(data);
-            if (!packet) {
+            const auto received = shared::Packet<shared::IntentMessage>::deserialize(data);
+            if (!received) {
                 //TODO: handle
                 std::cout << "Deserialize failed" << std::endl;
                 break;
             }
-            if (!peer->data) {
+            const auto session = sessions_.find(peer);
+            if (session == sessions_.end()) {
                 break;
             }
-            auto m = packet->message.intent;
-            size_t playerId = *static_cast<size_t*>(peer->data);
-            world_.setClientPlayerIntent(playerId, {m});
+            if (auto* controller = world_.controllerOf<NetworkController>(session->second)) {
+                controller->submit(received->message.seq, received->message.intent);
+            }
             break;
         }
         default:
@@ -117,27 +142,23 @@ void ServerApp::onDisconnect(ENetPeer* peer) {
     std::cout << "Peer disconnected from " << peer->address.host << ":" << peer->address.port
               << " (" << connectedPeers_ << " remaining).\n";
 
-    if (!peer->data) {
+    replicator_.leave(peer);
+    const auto session = sessions_.find(peer);
+    if (session == sessions_.end()) {
         return;
     }
-    size_t playerId = *static_cast<size_t *>(peer->data);
-
-    if (Player* player = world_.getPlayer(playerId)) {
-        renderer_.removeBody(&player->body);
-    }
-    world_.removePlayer(playerId);
-    delete static_cast<size_t *>(peer->data);
-    peer->data = nullptr;
+    world_.despawn(session->second);
+    sessions_.erase(session);
 }
 
 void ServerApp::onTick(uint64_t tick) {
     if (WindowShouldClose()) {
         stop();
     }
-    world_.update(1.0f/TPS);
+    world_.update(tickSeconds());
+    replicator_.flush(world_, tick);
 
-    context_.broadcast(world_.messageBuf, 0, 0);
-    renderer_.render();
+    renderer_.render(world_.entities(), hostPawn_);
 }
 
 } // namespace server

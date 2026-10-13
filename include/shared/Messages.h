@@ -20,7 +20,10 @@ namespace shared {
 
 enum class MessageType : uint16_t {
     INTENT,
-    PLAYERS,
+    POSSESS,
+    SPAWN,
+    DESPAWN,
+    SNAPSHOT,
     COUNT
 };
 

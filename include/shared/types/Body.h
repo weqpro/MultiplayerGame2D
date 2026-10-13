@@ -8,12 +8,10 @@ namespace shared {
 
 struct Body {
     Vector2 pos{};
-    Color color{};
 
-    static constexpr auto fields(auto& self) { return std::tie(self.pos, self.color); }
+    static constexpr auto fields(auto& self) { return std::tie(self.pos); }
 };
 
 }
 
 #endif
-

@@ -7,8 +7,18 @@
 #include <enet/enet.h>
 #include <span>
 #include "shared/ENetWrappers.h"
+#include "shared/Messages.h"
 
 namespace shared::network {
+
+struct Channel {
+    uint8_t id;
+    enet_uint32 flags;
+};
+
+inline constexpr Channel RELIABLE{0, ENET_PACKET_FLAG_RELIABLE};
+
+inline constexpr Channel UNRELIABLE{1, 0};
 
 class WebContext {
 public:
@@ -45,6 +55,22 @@ public:
 
     bool send(ENetPeer* peer, std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
     void broadcast(std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
+
+    template <Message M>
+    bool send(ENetPeer* peer, const M& message) {
+        const auto bytes = Packet<M>{message}.serialize();
+        return bytes && send(peer, *bytes, M::CHANNEL.id, M::CHANNEL.flags);
+    }
+
+    template <Message M>
+    bool broadcast(const M& message) {
+        const auto bytes = Packet<M>{message}.serialize();
+        if (!bytes) {
+            return false;
+        }
+        broadcast(*bytes, M::CHANNEL.id, M::CHANNEL.flags);
+        return true;
+    }
 
     ENetHost* getHost() const { return host_.get(); }
 
