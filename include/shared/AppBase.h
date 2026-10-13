@@ -3,14 +3,10 @@
 
 #include <chrono>
 #include <cstdint>
-#include <memory>
 #include <thread>
 #include <utility>
-#include <unordered_map>
 
 #include <enet/enet.h>
-
-#include "shared/entities/Entity.h"
 
 namespace shared {
 
@@ -29,6 +25,7 @@ public:
         if (targetTPS == 0) {
             targetTPS = 1;
         }
+        tickRate_ = targetTPS;
 
         const auto tickInterval =
             std::chrono::duration_cast<Clock::duration>(std::chrono::seconds(1)) / targetTPS;
@@ -69,6 +66,10 @@ public:
 
     uint64_t tickCount() const noexcept { return tick_; }
 
+    uint32_t tickRate() const noexcept { return tickRate_; }
+
+    float tickSeconds() const noexcept { return 1.0f / static_cast<float>(tickRate_); }
+
     Context& context() noexcept { return context_; }
 
     const Context& context() const noexcept { return context_; }
@@ -83,13 +84,6 @@ protected:
     ~AppBase() = default;
 
     Context context_;
-    std::unordered_map<uint32_t, std::unique_ptr<shared::Entity>> entities_ {};
-
-    uint32_t addEntity(std::unique_ptr<shared::Entity> entity) {
-        static uint32_t counter = 0;
-        entities_[counter++] = std::move(entity);        
-        return counter;
-    }
 
     bool onStartUp() { return true; }
 
@@ -109,6 +103,7 @@ private:
     const Derived& self() const noexcept { return static_cast<const Derived&>(*this); }
 
     uint64_t tick_{0};
+    uint32_t tickRate_{60};
     bool running_{false};
 };
 

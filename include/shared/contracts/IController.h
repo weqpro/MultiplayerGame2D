@@ -5,13 +5,20 @@
 
 namespace shared {
 
+class Agent;
+class EntityRegistry;
+
+struct ControlContext {
+    const Agent& self;
+    const EntityRegistry& world;
+    float dt;
+};
+
 class IController {
 public:
     virtual ~IController() = default;
-    virtual const Intent& getIntent() { return intent_; };
-    virtual void update() = 0;
-protected:
-    shared::Intent intent_;
+
+    [[nodiscard]] virtual Intent decide(const ControlContext& ctx) = 0;
 };
 
 }

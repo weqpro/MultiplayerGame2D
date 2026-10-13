@@ -2,16 +2,11 @@
 #define SERVER_WEB_SERVER_CONTEXT_H
 
 #include <cstdint>
-#include <string>
 #include <enet/enet.h>
 
 #include "shared/WebContext.h"
 
 namespace server {
-
-struct PeerSession {
-    std::string client_id;
-};
 
 class WebServerContext : public shared::network::WebContext {
 public:

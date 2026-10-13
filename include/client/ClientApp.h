@@ -1,8 +1,9 @@
 #ifndef CLIENT_CLIENT_APP_H
 #define CLIENT_CLIENT_APP_H
 
+#include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <span>
 #include <string>
 
 #include <enet/enet.h>
@@ -10,7 +11,8 @@
 #include "client/World.h"
 #include "shared/AppBase.h"
 #include "client/WebClientContext.h"
-#include "client/Renderer.h"
+#include "shared/Messages.h"
+#include "shared/Renderer.h"
 
 namespace client {
 
@@ -30,7 +32,6 @@ public:
 
     void onDisconnect(ENetPeer* peer);
 
-    static constexpr size_t TPS = 60;
 private:
     bool onStartUp();
 
@@ -38,12 +39,15 @@ private:
 
     void onShutDown();
 
+    template <shared::Message M>
+    void dispatch(std::span<const std::byte> data);
+
     std::string hostName_;
     uint16_t port_;
     ENetPeer* peer_{nullptr};
 
-    std::unique_ptr<World> world_;
-    std::unique_ptr<Renderer> renderer_;
+    World world_;
+    shared::Renderer renderer_;
 };
 
 } // namespace client

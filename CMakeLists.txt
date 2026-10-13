@@ -46,6 +46,12 @@ find_package(Threads REQUIRED)
 # 1. Shared Library
 # -----------------------------------------------------------------------------
 add_library(GameShared STATIC
+  src/shared/controllers/KeyboardController.cpp
+  src/shared/entities/Agent.cpp
+  src/shared/entities/Entity.cpp
+  src/shared/entities/EntityFactory.cpp
+  src/shared/entities/EntityRegistry.cpp
+  src/shared/types/Intent.cpp
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
   src/shared/Renderer.cpp
@@ -57,22 +63,22 @@ target_link_libraries(GameShared PUBLIC enet raylib)
 # -----------------------------------------------------------------------------
 # 2. Client Executable
 # -----------------------------------------------------------------------------
-# add_executable(MultiplayerGame2D_Client
-#   src/client/ClientApp.cpp
-#   src/client/Player.cpp
-#   src/client/WebClientContext.cpp
-#   src/client/World.cpp
-#   src/client/main.cpp
-# )
-#
-# target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
+add_executable(MultiplayerGame2D_Client
+  src/client/ClientApp.cpp
+  src/client/WebClientContext.cpp
+  src/client/World.cpp
+  src/client/main.cpp
+)
+
+target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
 
 # -----------------------------------------------------------------------------
 # 3. Server Executable
 # -----------------------------------------------------------------------------
 add_executable(MultiplayerGame2D_Server
-  src/server/controllers/LocalPlayerController.cpp
-  src/server/controllers/RemotePlayerController.cpp
+  src/server/controllers/NetworkController.cpp
+  src/server/controllers/WanderController.cpp
+  src/server/Replicator.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp
   src/server/World.cpp

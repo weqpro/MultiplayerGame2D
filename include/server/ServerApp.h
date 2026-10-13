@@ -3,14 +3,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
 
 #include <enet/enet.h>
 
 #include "shared/AppBase.h"
-#include "server/WebServerContext.h"
-
-#include "server/World.h"
 #include "shared/Renderer.h"
+#include "shared/types/Ids.h"
+#include "server/Replicator.h"
+#include "server/WebServerContext.h"
+#include "server/World.h"
 
 namespace server {
 
@@ -30,11 +32,10 @@ public:
 
     size_t connectedPeers() const noexcept { return connectedPeers_; }
 
-    static constexpr size_t TPS = 120;
 private:
     bool onStartUp();
 
-    void onTick(uint64_t /*tick*/);
+    void onTick(uint64_t tick);
 
     void onShutDown();
 
@@ -44,8 +45,12 @@ private:
     size_t peerCount_;
     size_t connectedPeers_{0};
 
-    World world_ {entities_};
-    shared::Renderer renderer_ {entities_};
+    World world_;
+    Replicator replicator_{context_};
+    shared::Renderer renderer_;
+
+    std::unordered_map<ENetPeer*, shared::EntityId> sessions_;
+    shared::EntityId hostPawn_{shared::NULL_ENTITY};
 };
 
 } // namespace server

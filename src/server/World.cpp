@@ -1,23 +1,34 @@
 #include "server/World.h"
-#include <raylib.h>
 
-#include "shared/entities/Agent.h"
+#include <utility>
 
 namespace server {
 
-void World::update(float dt) {
-    for (auto& [entityId,entity]: entities_) {
-        if (auto* agent = dynamic_cast<shared::Agent*>(entity.get())){
-            agent->controller->update();
-        }
-    };
-    for (auto& [entityId,entity]: entities_) {
-        if (auto* agent = dynamic_cast<shared::Agent*>(entity.get())){
-            auto intent = agent->controller->getIntent();
-            agent->body.pos.x += intent.input.x * agent->body.speed * dt;
-            agent->body.pos.y += intent.input.y * agent->body.speed * dt;
-        }
+void World::despawn(shared::EntityId id) {
+    possessions_.erase(id);
+    if (registry_.erase(id)) {
+        events_.despawned.push_back(id);
     }
+}
+
+void World::release(shared::EntityId pawn) {
+    possessions_.erase(pawn);
+}
+
+void World::update(float dt) {
+    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions;
+    decisions.reserve(possessions_.size());
+    for (auto& [id, possession] : possessions_) {
+        const shared::ControlContext ctx{*possession.pawn, registry_, dt};
+        decisions.emplace_back(possession.pawn, possession.controller->decide(ctx));
+    }
+    for (auto& [pawn, intent] : decisions) {
+        pawn->act(intent, dt);
+    }
+}
+
+World::Events World::drainEvents() {
+    return std::exchange(events_, {});
 }
 
 }

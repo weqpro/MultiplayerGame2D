@@ -1,25 +1,33 @@
 #ifndef CLIENT_WORLD_H
 #define CLIENT_WORLD_H
 
-#include <raylib.h>
-#include <unordered_map>
-#include <vector>
+#include <optional>
 
-#include "client/Player.h"
+#include "shared/Protocol.h"
+#include "shared/controllers/KeyboardController.h"
+#include "shared/entities/EntityRegistry.h"
+#include "shared/types/Ids.h"
 
 namespace client {
 
 class World {
 public:
-    World() : playerController_ {} {};
-    void update(float dt);
-    void joinPlayer(Player player, size_t playerId);
-    void removePlayer(size_t playerId);
+    void apply(const shared::PossessMessage& message);
+    void apply(const shared::SpawnMessage& message);
+    void apply(const shared::DespawnMessage& message);
+    void apply(const shared::SnapshotMessage& message);
 
-    std::vector<std::byte> messageBuf;
-    std::unordered_map<size_t, Player> players_;
+    [[nodiscard]] std::optional<shared::IntentMessage> sampleIntent(float dt);
+
+    [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
+    [[nodiscard]] shared::EntityId pawn() const noexcept { return pawn_; }
+
 private:
-    Controller playerController_ {};
+    shared::EntityRegistry registry_;
+    shared::EntityId pawn_{shared::NULL_ENTITY};
+    shared::KeyboardController input_;
+    shared::InputSeq nextSeq_{1};
+    std::optional<shared::Tick> lastTick_;
 };
 
 }

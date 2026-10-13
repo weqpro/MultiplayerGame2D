@@ -1,21 +1,17 @@
 #ifndef SHARED_RENDERER_H
 #define SHARED_RENDERER_H
 
-#include <unordered_map>
-#include <cstdint>
-#include <memory>
-
-#include "shared/entities/Entity.h"
+#include "shared/entities/EntityRegistry.h"
+#include "shared/types/Ids.h"
 
 namespace shared {
 
 class Renderer {
 public:
-    explicit Renderer(auto& entities) : entities_{entities} {};
-    void render();
-    void render(Body& body);
+    void render(const EntityRegistry& entities, EntityId localPawn = NULL_ENTITY) const;
+
 private:
-    std::unordered_map<uint32_t, std::unique_ptr<shared::Entity>>& entities_;
+    void draw(const Entity& entity, bool local) const;
 };
 
 }
