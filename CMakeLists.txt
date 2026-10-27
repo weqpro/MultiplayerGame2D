@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.15...3.30)
+cmake_minimum_required(VERSION 3.20...3.30)
 
 project(
   MultiplayerGame2D
-  VERSION 1.0.0
+  VERSION 1.0.1
   LANGUAGES C CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -31,6 +31,8 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(enet raylib)
+
+set_target_properties(enet raylib glfw PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
 
 target_include_directories(enet INTERFACE ${enet_SOURCE_DIR}/include)
 
