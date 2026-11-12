@@ -8,6 +8,7 @@ void Agent::act(const Intent& intent, float dt) {
 
 void Agent::doAct(const Intent& intent, float dt) {
     Body next = body();
+    prevPos = body().pos;
     next.pos.x += intent.move.x * locomotion_.speed * dt;
     next.pos.y += intent.move.y * locomotion_.speed * dt;
     setBody(next);

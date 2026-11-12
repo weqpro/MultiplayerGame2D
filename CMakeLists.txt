@@ -43,6 +43,7 @@ endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED COMPONENTS json)
 
 # -----------------------------------------------------------------------------
 # 1. Shared Library
@@ -57,6 +58,7 @@ add_library(GameShared STATIC
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
   src/shared/Renderer.cpp
+  src/shared/WorldMap.cpp
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -65,14 +67,14 @@ target_link_libraries(GameShared PUBLIC enet raylib)
 # -----------------------------------------------------------------------------
 # 2. Client Executable
 # -----------------------------------------------------------------------------
-add_executable(MultiplayerGame2D_Client
-  src/client/ClientApp.cpp
-  src/client/WebClientContext.cpp
-  src/client/World.cpp
-  src/client/main.cpp
-)
-
-target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
+# add_executable(MultiplayerGame2D_Client
+#   src/client/ClientApp.cpp
+#   src/client/WebClientContext.cpp
+#   src/client/World.cpp
+#   src/client/main.cpp
+# )
+#
+# target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
 
 # -----------------------------------------------------------------------------
 # 3. Server Executable
@@ -87,4 +89,4 @@ add_executable(MultiplayerGame2D_Server
   src/server/main.cpp
 )
 
-target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)
+target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads Boost::json)

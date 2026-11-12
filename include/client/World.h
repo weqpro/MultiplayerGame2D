@@ -3,6 +3,7 @@
 
 #include <optional>
 
+#include "shared/WorldMap.h"
 #include "shared/Protocol.h"
 #include "shared/controllers/KeyboardController.h"
 #include "shared/entities/EntityRegistry.h"
@@ -21,6 +22,7 @@ public:
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
     [[nodiscard]] shared::EntityId pawn() const noexcept { return pawn_; }
+    [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
 
 private:
     shared::EntityRegistry registry_;
@@ -28,6 +30,7 @@ private:
     shared::KeyboardController input_;
     shared::InputSeq nextSeq_{1};
     std::optional<shared::Tick> lastTick_;
+    shared::WorldMap worldMap_{};
 };
 
 }

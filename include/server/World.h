@@ -8,10 +8,12 @@
 #include <utility>
 #include <vector>
 
+#include "shared/WorldMap.h"
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
 #include "shared/types/Ids.h"
+#include "shared/controllers/CameraController.h"
 
 namespace server {
 
@@ -56,6 +58,9 @@ public:
     [[nodiscard]] Events drainEvents();
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
+    [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
+    [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
+    void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
 
 private:
     struct Possession {
@@ -67,6 +72,8 @@ private:
     std::unordered_map<shared::EntityId, Possession> possessions_;
     shared::EntityId nextId_{1};
     Events events_;
+    shared::WorldMap worldMap_{};
+    CameraWrapper cam_;
 };
 
 }

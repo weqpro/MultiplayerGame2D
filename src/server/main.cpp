@@ -76,7 +76,6 @@ int main(int argc, char** argv) {
         std::cerr << "Failed to initialize ENet.\n";
         return EXIT_FAILURE;
     }
-
     server::ServerApp app(port, peers);
     app.run(tps);
 

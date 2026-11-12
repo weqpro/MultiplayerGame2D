@@ -4,6 +4,10 @@
 
 namespace server {
 
+namespace {
+constexpr size_t LOAD_MAP_RETRY = 10; 
+}
+
 void World::despawn(shared::EntityId id) {
     possessions_.erase(id);
     if (registry_.erase(id)) {
@@ -29,6 +33,17 @@ void World::update(float dt) {
 
 World::Events World::drainEvents() {
     return std::exchange(events_, {});
+}
+
+void World::setMap(const std::filesystem::path& mapPath) {
+    for (size_t i = 0; i < LOAD_MAP_RETRY; ++i) {
+        auto map = worldMap_.fromFile(mapPath);
+        if (map) {
+            worldMap_ = std::move(map.value());
+            return;
+        }
+    }
+    DrawText("Failed to load map! Try buying a new PC", 20, 20, 20, RED);
 }
 
 }
