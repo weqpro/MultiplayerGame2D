@@ -55,6 +55,13 @@ bool ServerApp::onStartUp() {
                                               "host");
     world_.setMap();
     renderer_.loadAtlas();
+
+    constexpr float TILE = 16.0f;
+    auto& [cam, camCtrl] = world_.camera();
+    const auto& map = world_.worldMap();
+    camCtrl.bounds = {0, 0, static_cast<float>(map.width()) * TILE, static_cast<float>(map.height()) * TILE};
+    camCtrl.snapTo(cam, host.body().pos);
+
     world_.possess<shared::KeyboardController>(host);
     hostPawn_ = host.id();
 
@@ -160,9 +167,9 @@ void ServerApp::onTick(uint64_t tick) {
     world_.update(tickSeconds());
     replicator_.flush(world_, tick);
 
-    auto [cam, camCtrl] = world_.camera();
+    auto& [cam, camCtrl] = world_.camera();
     auto me = world_.entities().find<shared::Player>(hostPawn_);
-    camCtrl.update(cam, tick, me->body().pos, me->body().pos - me->prevPos);
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
     renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_);
 }
 

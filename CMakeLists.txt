@@ -62,7 +62,7 @@ add_library(GameShared STATIC
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GameShared PUBLIC enet raylib)
+target_link_libraries(GameShared PUBLIC enet raylib Boost::json)
 
 # -----------------------------------------------------------------------------
 # 2. Client Executable
@@ -89,4 +89,10 @@ add_executable(MultiplayerGame2D_Server
   src/server/main.cpp
 )
 
-target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads Boost::json)
+target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)
+
+add_custom_command(TARGET MultiplayerGame2D_Server POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          ${CMAKE_SOURCE_DIR}/assets
+          $<TARGET_FILE_DIR:MultiplayerGame2D_Server>/assets
+)

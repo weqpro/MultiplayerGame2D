@@ -2,6 +2,7 @@
 
 #include <expected>
 #include <fstream>
+#include <sstream>
 
 #include <boost/json.hpp>
 
@@ -20,7 +21,7 @@ std::expected<WorldMap, WorldMap::MapError> WorldMap::fromFile(const std::filesy
 }
 
 std::expected<WorldMap, WorldMap::MapError> WorldMap::fromJson(std::string_view json) {
-    boost::json::error_code ec;
+    boost::system::error_code ec;
     boost::json::value jv = boost::json::parse(json, ec);
 
     if (ec || !jv.is_object()) {
@@ -81,17 +82,25 @@ std::expected<WorldMap, WorldMap::MapError> WorldMap::fromJson(std::string_view 
         
         if (row_val.is_string()) {
             const auto& row_str = row_val.get_string();
-            if (row_str.size() != width) {
-                return std::unexpected(MapError::SizeMismatch);
-            }
-            for (size_t x = 0; x < width; ++x) {
-                char c = row_str[x];
-                uint16_t tile_id = (c >= '0' && c <= '9') ? (c - '0') : static_cast<uint16_t>(c);
-                
+            size_t x = 0;
+            std::string_view sv(row_str.data(), row_str.size());
+            while (!sv.empty() && x < width) {
+                auto sep = sv.find(',');
+                auto token = sv.substr(0, sep);
+                uint16_t tile_id = 0;
+                for (char c : token) {
+                    if (c >= '0' && c <= '9')
+                        tile_id = tile_id * 10 + static_cast<uint16_t>(c - '0');
+                }
                 layer.push_back(tile_id);
                 if (is_solid[tile_id]) {
                     collisions.set(x, y);
                 }
+                ++x;
+                sv = (sep == std::string_view::npos) ? std::string_view{} : sv.substr(sep + 1);
+            }
+            if (x != width) {
+                return std::unexpected(MapError::SizeMismatch);
             }
         } 
         else if (row_val.is_array()) {

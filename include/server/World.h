@@ -59,6 +59,7 @@ public:
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
     [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
+    [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
     [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
     void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
 
