@@ -10,7 +10,7 @@ namespace shared {
 
 struct Body {
     Vector2 pos{};
-    health_point health{100_hp};
+    HealthPoint health{100_hp};
 
     static constexpr auto fields(auto& self) { return std::tie(self.pos, self.health); }
 };
