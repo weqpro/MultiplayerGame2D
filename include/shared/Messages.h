@@ -24,6 +24,7 @@ enum class MessageType : uint16_t {
     SPAWN,
     DESPAWN,
     SNAPSHOT,
+    MAP,
     COUNT
 };
 
