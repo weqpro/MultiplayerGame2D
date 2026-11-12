@@ -12,7 +12,7 @@ namespace shared {
 class Player final : public Agent {
 public:
     static constexpr EntityKind KIND = EntityKind::PLAYER;
-    static constexpr Locomotion LOCOMOTION{.speed = 50.0f};
+    static constexpr Locomotion LOCOMOTION{.speed = 67.0f};
 
     Player(EntityId id, const Body& body, const Appearance& look, std::string username)
         : Agent{id, body, look, LOCOMOTION}, username_{std::move(username)} {}

@@ -80,6 +80,7 @@ target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads
 add_executable(MultiplayerGame2D_Server
   src/server/controllers/NetworkController.cpp
   src/server/controllers/WanderController.cpp
+  src/server/controllers/ZombieController.cpp
   src/server/Replicator.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp

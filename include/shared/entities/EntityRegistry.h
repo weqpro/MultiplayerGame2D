@@ -33,6 +33,17 @@ public:
              | std::views::transform([](const std::unique_ptr<Entity>& e) -> const Entity& { return *e; });
     }
 
+    template <std::derived_from<Entity> T>
+    [[nodiscard]] auto all() const {
+        return entities_ | std::views::values
+            | std::views::filter([](const std::unique_ptr<Entity>& e) {
+                return dynamic_cast<const T*>(e.get()) != nullptr;
+            })
+            | std::views::transform([](const std::unique_ptr<Entity>& e) -> const T& {
+                return static_cast<const T&>(*e);
+            });
+    }
+
     [[nodiscard]] std::size_t size() const noexcept { return entities_.size(); }
 
 private:

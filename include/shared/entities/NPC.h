@@ -8,7 +8,7 @@ namespace shared {
 class NPC final : public Agent {
 public:
     static constexpr EntityKind KIND = EntityKind::NPC;
-    static constexpr Locomotion LOCOMOTION{.speed = 35.0f};
+    static constexpr Locomotion LOCOMOTION{.speed = 35.0f}; // TODO: give locomotion in constructor
 
     NPC(EntityId id, const Body& body, const Appearance& look)
         : Agent{id, body, look, LOCOMOTION} {}

@@ -9,6 +9,7 @@
 
 #include "server/controllers/NetworkController.h"
 #include "server/controllers/WanderController.h"
+#include "server/controllers/ZombieController.h"
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
 #include "shared/controllers/KeyboardController.h"
@@ -60,7 +61,7 @@ bool ServerApp::onStartUp() {
         const Vector2 home = randomPoint(250, 550, 120, 330);
         auto& npc = world_.spawn<shared::NPC>(shared::Body{.pos = home},
                                               shared::Appearance{.color = GRAY, .radius = 7.0f});
-        world_.possess<WanderController>(npc, home, NPC_LEASH);
+        world_.possess<ZombieController>(npc, home, NPC_LEASH, 120.0f);
     }
     return true;
 }
