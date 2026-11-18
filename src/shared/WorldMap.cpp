@@ -145,6 +145,11 @@ WorldMap& WorldMap::operator=(WorldMap&& o) noexcept {
     return *this;
 }
 
+std::expected<WorldMap, WorldMap::MapError>  WorldMap::fromNetwork(shared::MapMessage mapMsg) {
+    WorldMap map {mapMsg.map.height, mapMsg.map.width, std::move(mapMsg.map.layer), {}};
+    return map;
+}
+
 }
 
 

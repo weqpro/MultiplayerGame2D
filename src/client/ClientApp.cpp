@@ -9,6 +9,8 @@
 
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
+#include "shared/entities/Player.h"
+#include "shared/types/Ids.h"
 
 namespace client {
 namespace {
@@ -50,7 +52,14 @@ void ClientApp::onTick(uint64_t /*tick*/) {
             context_.send(peer_, *intent);
         }
     }
-    renderer_.render(world_.entities(), world_.pawn());
+
+    auto& [cam, camCtrl] = world_.camera();
+    if (world_.pawn() == shared::NULL_ENTITY) {
+        return;
+    }
+    auto me = world_.entities().find<shared::Player>(world_.pawn());
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
+    renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
 }
 
 void ClientApp::onShutDown() {
@@ -104,6 +113,8 @@ void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*chan
         case shared::MessageType::SNAPSHOT:
             dispatch<shared::SnapshotMessage>(data);
             break;
+        case shared::MessageType::MAP:
+            dispatch<shared::MapMessage>(data);
         default:
             break;
     }

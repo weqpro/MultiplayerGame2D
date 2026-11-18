@@ -70,16 +70,18 @@ struct SnapshotMessage {
 };
 
 struct MapInfo {
-    size_t width_ = 0;
-    size_t height_ = 0;
-    std::vector<uint16_t> layer_;
+    size_t width = 0;
+    size_t height = 0;
+    std::vector<uint16_t> layer;
+
+    static constexpr auto fields(auto& self) { return std::tie(self.width, self.height, self.layer); }
 };
 
 struct MapMessage {
     static constexpr MessageType TYPE = MessageType::MAP;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
-    MapInfo map;
+    MapInfo map {};
     static constexpr auto fields(auto& self) { return std::tie(self.map); }
 };
 

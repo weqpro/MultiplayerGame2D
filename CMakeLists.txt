@@ -67,14 +67,14 @@ target_link_libraries(GameShared PUBLIC enet raylib Boost::json)
 # -----------------------------------------------------------------------------
 # 2. Client Executable
 # -----------------------------------------------------------------------------
-# add_executable(MultiplayerGame2D_Client
-#   src/client/ClientApp.cpp
-#   src/client/WebClientContext.cpp
-#   src/client/World.cpp
-#   src/client/main.cpp
-# )
-#
-# target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
+add_executable(MultiplayerGame2D_Client
+  src/client/ClientApp.cpp
+  src/client/WebClientContext.cpp
+  src/client/World.cpp
+  src/client/main.cpp
+)
+
+target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads::Threads)
 
 # -----------------------------------------------------------------------------
 # 3. Server Executable
