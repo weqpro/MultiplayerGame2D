@@ -16,7 +16,6 @@
 namespace shared {
 
 struct IntentMessage {
-    static constexpr MessageType TYPE = MessageType::INTENT;
     static constexpr network::Channel CHANNEL = network::UNRELIABLE;
 
     InputSeq seq{};
@@ -26,7 +25,6 @@ struct IntentMessage {
 };
 
 struct PossessMessage {
-    static constexpr MessageType TYPE = MessageType::POSSESS;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     EntityId pawn{NULL_ENTITY};
@@ -35,7 +33,6 @@ struct PossessMessage {
 };
 
 struct SpawnMessage {
-    static constexpr MessageType TYPE = MessageType::SPAWN;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     std::vector<SpawnInfo> entities;
@@ -44,7 +41,6 @@ struct SpawnMessage {
 };
 
 struct DespawnMessage {
-    static constexpr MessageType TYPE = MessageType::DESPAWN;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     std::vector<EntityId> ids;
@@ -60,7 +56,6 @@ struct EntityState {
 };
 
 struct SnapshotMessage {
-    static constexpr MessageType TYPE = MessageType::SNAPSHOT;
     static constexpr network::Channel CHANNEL = network::UNRELIABLE;
 
     Tick tick{};
@@ -68,6 +63,10 @@ struct SnapshotMessage {
 
     static constexpr auto fields(auto& self) { return std::tie(self.tick, self.entities); }
 };
+
+// Wire id = position in the list. Client and server are always built from the same source.
+using ClientMessages = MessageList<IntentMessage>;
+using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage>;
 
 }
 

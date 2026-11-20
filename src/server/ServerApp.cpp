@@ -108,31 +108,22 @@ void ServerApp::onConnect(ENetPeer* peer) {
 
 void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t /*channelID*/) {
     const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-    const auto type = shared::peek_type(data);
-    if (!type) {
+    const auto result = shared::dispatch<shared::ClientMessages>(data, [this, peer](const auto& message) {
+        handle(peer, message);
+    });
+    if (result != shared::DispatchResult::OK) {
         //TODO: handle
-        std::cout << "Invalid type" << std::endl;
+        std::cout << "Bad packet (" << static_cast<int>(result) << ")" << std::endl;
+    }
+}
+
+void ServerApp::handle(ENetPeer* peer, const shared::IntentMessage& message) {
+    const auto session = sessions_.find(peer);
+    if (session == sessions_.end()) {
         return;
     }
-    switch (*type) {
-        case shared::MessageType::INTENT: {
-            const auto received = shared::Packet<shared::IntentMessage>::deserialize(data);
-            if (!received) {
-                //TODO: handle
-                std::cout << "Deserialize failed" << std::endl;
-                break;
-            }
-            const auto session = sessions_.find(peer);
-            if (session == sessions_.end()) {
-                break;
-            }
-            if (auto* controller = world_.controllerOf<NetworkController>(session->second)) {
-                controller->submit(received->message.seq, received->message.intent);
-            }
-            break;
-        }
-        default:
-            break;
+    if (auto* controller = world_.controllerOf<NetworkController>(session->second)) {
+        controller->submit(message.seq, message.intent);
     }
 }
 

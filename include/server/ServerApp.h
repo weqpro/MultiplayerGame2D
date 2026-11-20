@@ -39,6 +39,8 @@ private:
 
     void onShutDown();
 
+    void handle(ENetPeer* peer, const shared::IntentMessage& message);
+
     uint32_t serviceTimeout() const { return 1; }
 
     uint16_t port_;
