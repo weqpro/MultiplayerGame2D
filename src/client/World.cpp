@@ -7,11 +7,15 @@
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityFactory.h"
 #include "shared/WorldMap.h"
+#include "shared/entities/Player.h"
 
 namespace client {
 
 void World::apply(const shared::PossessMessage& message) {
     pawn_ = message.pawn;
+    auto me = entities().find<shared::Player>(pawn_);
+    auto& [cam, camCtrl] = camera();
+    camCtrl.snapTo(cam, me->body().pos);
 }
 
 void World::apply(const shared::SpawnMessage& message) {
@@ -24,6 +28,7 @@ void World::apply(const shared::SpawnMessage& message) {
         }
         registry_.insert(std::move(entity));
     }
+
 }
 
 void World::apply(const shared::DespawnMessage& message) {

@@ -62,11 +62,11 @@ void Replicator::bootstrapJoiners(const World& world) {
     for (const shared::Entity& entity : world.entities().all()) {
         msg.entities.push_back(entity.describe());
     }
-    shared::MapMessage mapMsg;
+    shared::MapMessage mapMsg {};
     auto& map = world.worldMap();
     mapMsg.map.height = map.height();
     mapMsg.map.width = map.width();
-    std::copy(map.layer().begin(), map.layer().end(), mapMsg.map.layer.begin());
+    mapMsg.map.layer.assign(map.layer().begin(), map.layer().end());
 
     for (const Joiner& joiner : joiners_) {
         net_.send(joiner.peer, shared::PossessMessage{.pawn = joiner.pawn});

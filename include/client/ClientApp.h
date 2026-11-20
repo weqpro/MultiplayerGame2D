@@ -48,6 +48,8 @@ private:
 
     World world_;
     shared::Renderer renderer_;
+    bool mapReady_ = false;
+    bool boundReady_ = false;
 };
 
 } // namespace client

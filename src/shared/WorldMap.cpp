@@ -3,6 +3,7 @@
 #include <expected>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #include <boost/json.hpp>
 
@@ -147,6 +148,18 @@ WorldMap& WorldMap::operator=(WorldMap&& o) noexcept {
 
 std::expected<WorldMap, WorldMap::MapError>  WorldMap::fromNetwork(shared::MapMessage mapMsg) {
     WorldMap map {mapMsg.map.height, mapMsg.map.width, std::move(mapMsg.map.layer), {}};
+    if (map.height() == 0) {
+        std::cerr << "Map has 0 height" << std::endl;
+        return std::unexpected(MapError::Network);
+    }
+    if (map.width() == 0) {
+        std::cerr << "Map has 0 width" << std::endl;
+        return std::unexpected(MapError::Network);
+    }
+    if (map.layer().size() != map.width() * map.height()) {
+        std::cerr << "Map dimensions don't match" << std::endl;
+        return std::unexpected(MapError::Network);
+    }
     return map;
 }
 

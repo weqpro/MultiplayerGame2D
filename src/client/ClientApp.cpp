@@ -40,6 +40,8 @@ bool ClientApp::onStartUp() {
         return false;
     }
 
+    renderer_.loadAtlas();
+
     return true;
 }
 
@@ -52,10 +54,18 @@ void ClientApp::onTick(uint64_t /*tick*/) {
             context_.send(peer_, *intent);
         }
     }
-
+    if (!mapReady_) {
+        return;
+    }
     auto& [cam, camCtrl] = world_.camera();
     if (world_.pawn() == shared::NULL_ENTITY) {
         return;
+    }
+    if (!boundReady_) {
+        auto& map = world_.worldMap();
+        constexpr float TILE = 16.0f;
+        camCtrl.bounds = {0, 0, static_cast<float>(map.width()) * TILE, static_cast<float>(map.height()) * TILE};
+        boundReady_ = true;
     }
     auto me = world_.entities().find<shared::Player>(world_.pawn());
     camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
@@ -115,6 +125,7 @@ void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*chan
             break;
         case shared::MessageType::MAP:
             dispatch<shared::MapMessage>(data);
+            mapReady_ = true;
         default:
             break;
     }

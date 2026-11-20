@@ -52,7 +52,8 @@ public:
     enum class MapError {
         FileNotFound,
         SizeMismatch,
-        InvalidJson
+        InvalidJson,
+        Network
     };
 
     WorldMap() = default;
@@ -72,7 +73,7 @@ public:
     static std::expected<WorldMap, MapError> fromNetwork(shared::MapMessage map);
     size_t width()  const { return width_; }
     size_t height() const { return height_; }
-    const std::vector<uint16_t> layer() const {return layer_; }
+    const std::vector<uint16_t>& layer() const {return layer_; }
 
     uint16_t tile(size_t x, size_t y) const { return layer_[y * width_ + x]; }
 
