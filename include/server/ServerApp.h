@@ -8,9 +8,12 @@
 #include <enet/enet.h>
 
 #include "shared/AppBase.h"
+#include "shared/Protocol.h"
 #include "shared/Renderer.h"
+#include "shared/types/Action.h"
 #include "shared/types/Ids.h"
 #include "server/Replicator.h"
+#include "server/controllers/NetworkController.h"
 #include "server/WebServerContext.h"
 #include "server/World.h"
 
@@ -39,7 +42,16 @@ private:
 
     void onShutDown();
 
-    void handle(ENetPeer* peer, const shared::IntentMessage& message);
+    void handle(ENetPeer* peer, const shared::ControlsMessage& message);
+
+    template <typename A>
+    void handle(ENetPeer* peer, const shared::ActionMessage<A>& message) {
+        enqueueAction(peer, message.action);
+    }
+
+    void enqueueAction(ENetPeer* peer, const shared::Action& action);
+
+    [[nodiscard]] NetworkController* networkControllerOf(ENetPeer* peer);
 
     uint32_t serviceTimeout() const { return 1; }
 

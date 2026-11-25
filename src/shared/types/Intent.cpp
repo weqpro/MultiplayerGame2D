@@ -4,19 +4,19 @@
 
 namespace shared {
 
-Intent sanitize(Intent intent) noexcept {
-    if (!std::isfinite(intent.move.x)) {
-        intent.move.x = 0.0f;
+Controls sanitize(Controls controls) noexcept {
+    if (!std::isfinite(controls.move.x)) {
+        controls.move.x = 0.0f;
     }
-    if (!std::isfinite(intent.move.y)) {
-        intent.move.y = 0.0f;
+    if (!std::isfinite(controls.move.y)) {
+        controls.move.y = 0.0f;
     }
-    const float length = std::hypot(intent.move.x, intent.move.y);
+    const float length = std::hypot(controls.move.x, controls.move.y);
     if (length > 1.0f) {
-        intent.move.x /= length;
-        intent.move.y /= length;
+        controls.move.x /= length;
+        controls.move.y /= length;
     }
-    return intent;
+    return controls;
 }
 
 }

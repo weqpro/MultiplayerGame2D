@@ -11,6 +11,7 @@
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
+#include "shared/types/Action.h"
 #include "shared/types/Ids.h"
 
 namespace server {
@@ -58,6 +59,13 @@ public:
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
 
 private:
+    void resolve(shared::Agent& actor, const shared::MeleeAction& action);
+    void resolve(shared::Agent& actor, const shared::ShootAction& action);
+    void resolve(shared::Agent& actor, const shared::PickUpAction& action);
+
+    // Despawns every agent at 0 health. Runs after all actions, so same-tick hits all land.
+    void despawnDead();
+
     struct Possession {
         shared::Agent* pawn;
         std::unique_ptr<shared::IController> controller;
@@ -67,6 +75,8 @@ private:
     std::unordered_map<shared::EntityId, Possession> possessions_;
     shared::EntityId nextId_{1};
     Events events_;
+    // Reused every tick so update() doesn't allocate once its capacity has grown.
+    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions_;
 };
 
 }

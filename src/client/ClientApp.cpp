@@ -5,6 +5,7 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "shared/Messages.h"
@@ -46,8 +47,14 @@ void ClientApp::onTick(uint64_t /*tick*/) {
         stop();
     }
     if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
-        if (const auto intent = world_.sampleIntent(tickSeconds())) {
-            context_.send(peer_, *intent);
+        if (const auto sample = world_.sampleIntent(tickSeconds())) {
+            const auto& [seq, intent] = *sample;
+            context_.send(peer_, shared::ControlsMessage{.seq = seq, .controls = intent.controls});
+            for (const shared::Action& action : intent.actions) {
+                shared::visitAction(action, [this](const auto& a) {
+                    context_.send(peer_, shared::ActionMessage<std::remove_cvref_t<decltype(a)>>{a});
+                });
+            }
         }
     }
     renderer_.render(world_.entities(), world_.pawn());

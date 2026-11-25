@@ -53,6 +53,7 @@ add_library(GameShared STATIC
   src/shared/entities/Entity.cpp
   src/shared/entities/EntityFactory.cpp
   src/shared/entities/EntityRegistry.cpp
+  src/shared/types/Action.cpp
   src/shared/types/Intent.cpp
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp

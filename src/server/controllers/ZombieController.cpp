@@ -29,8 +29,12 @@ shared::Intent ZombieController::decide(const shared::ControlContext& ctx) {
         target = ctx.world.find(*targetId_);
     }
 
-    const Vector2 toTarget = Vector2Subtract(target->body().pos, selfPos);
-    return {.move = Vector2Normalize(toTarget)};
+    const Vector2 dir = Vector2Normalize(Vector2Subtract(target->body().pos, selfPos));
+    shared::Intent intent{.controls = {.move = dir}};
+    if (ctx.self.canAttack() && ctx.self.inReach(*target)) {
+        intent.actions.push_back(shared::MeleeAction{.dir = dir});
+    }
+    return intent;
 }
 
 std::optional<shared::EntityId> ZombieController::tryFindPlayer(const shared::ControlContext& ctx) {

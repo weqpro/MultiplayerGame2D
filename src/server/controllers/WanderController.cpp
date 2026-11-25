@@ -54,7 +54,7 @@ shared::Intent WanderController::decide(const shared::ControlContext& ctx) {
             untilTurn_ = randomSeconds(2000, 3000);
         }
     }
-    return {.move = Vector2Scale(Vector2Normalize(heading_), WANDER_SPEED_)};
+    return {.controls = {.move = Vector2Scale(Vector2Normalize(heading_), WANDER_SPEED_)}};
 }
 
 }

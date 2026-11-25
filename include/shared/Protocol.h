@@ -2,10 +2,12 @@
 #define SHARED_PROTOCOL_H
 
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "shared/Messages.h"
 #include "shared/WebContext.h"
+#include "shared/types/Action.h"
 #include "shared/types/Body.h"
 #include "shared/types/ExternalFields.h"
 #include "shared/types/Ids.h"
@@ -15,13 +17,22 @@
 
 namespace shared {
 
-struct IntentMessage {
+struct ControlsMessage {
     static constexpr network::Channel CHANNEL = network::UNRELIABLE;
 
     InputSeq seq{};
-    Intent intent{};
+    Controls controls{};
 
-    static constexpr auto fields(auto& self) { return std::tie(self.seq, self.intent); }
+    static constexpr auto fields(auto& self) { return std::tie(self.seq, self.controls); }
+};
+
+template <typename A>
+struct ActionMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    A action{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.action); }
 };
 
 struct PossessMessage {
@@ -64,8 +75,17 @@ struct SnapshotMessage {
     static constexpr auto fields(auto& self) { return std::tie(self.tick, self.entities); }
 };
 
+template <typename V>
+struct ClientMessagesOf;
+
+template <typename... As>
+struct ClientMessagesOf<std::variant<As...>> {
+    using type = MessageList<ControlsMessage, ActionMessage<As>...>;
+};
+
 // Wire id = position in the list. Client and server are always built from the same source.
-using ClientMessages = MessageList<IntentMessage>;
+// ControlsMessage = 0, then one ActionMessage<A> per Action alternative, in variant order.
+using ClientMessages = ClientMessagesOf<Action>::type;
 using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage>;
 
 }

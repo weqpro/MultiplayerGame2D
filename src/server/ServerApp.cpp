@@ -117,14 +117,24 @@ void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t /*channelI
     }
 }
 
-void ServerApp::handle(ENetPeer* peer, const shared::IntentMessage& message) {
+void ServerApp::handle(ENetPeer* peer, const shared::ControlsMessage& message) {
+    if (auto* controller = networkControllerOf(peer)) {
+        controller->submit(message.seq, message.controls);
+    }
+}
+
+void ServerApp::enqueueAction(ENetPeer* peer, const shared::Action& action) {
+    if (auto* controller = networkControllerOf(peer)) {
+        controller->enqueue(action);
+    }
+}
+
+NetworkController* ServerApp::networkControllerOf(ENetPeer* peer) {
     const auto session = sessions_.find(peer);
     if (session == sessions_.end()) {
-        return;
+        return nullptr;
     }
-    if (auto* controller = world_.controllerOf<NetworkController>(session->second)) {
-        controller->submit(message.seq, message.intent);
-    }
+    return world_.controllerOf<NetworkController>(session->second);
 }
 
 void ServerApp::onDisconnect(ENetPeer* peer) {

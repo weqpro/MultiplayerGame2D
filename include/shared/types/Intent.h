@@ -4,15 +4,24 @@
 #include <raylib.h>
 #include <tuple>
 
+#include "shared/types/Action.h"
+
 namespace shared {
 
-struct Intent {
+// Continuous input: only the latest value matters.
+struct Controls {
     Vector2 move{};
 
     static constexpr auto fields(auto& self) { return std::tie(self.move); }
 };
 
-[[nodiscard]] Intent sanitize(Intent intent) noexcept;
+// Everything a controller decides in one tick. Never sent whole: see ControlsMessage and ActionMessage.
+struct Intent {
+    Controls controls;
+    ActionList actions;
+};
+
+[[nodiscard]] Controls sanitize(Controls controls) noexcept;
 
 }
 
