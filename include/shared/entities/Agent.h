@@ -3,6 +3,8 @@
 
 #include "shared/entities/Entity.h"
 #include "shared/types/Intent.h"
+#include "server/CollisionQuery.h"
+#include "shared/types/WorldView.h"
 
 namespace shared {
 
@@ -12,7 +14,7 @@ struct Locomotion {
 
 class Agent : public Entity {
 public:
-    void act(const Intent& intent, float dt);
+    void act(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView);
 
     [[nodiscard]] const Locomotion& locomotion() const noexcept { return locomotion_; }
 
@@ -21,7 +23,7 @@ protected:
     Agent(EntityId id, const Body& body, const Appearance& look, const Locomotion& locomotion)
         : Entity{id, body, look}, locomotion_{locomotion}, prevPos(body.pos) {}
 
-    virtual void doAct(const Intent& intent, float dt);
+    virtual void doAct(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView);
 
 private:
     Locomotion locomotion_;

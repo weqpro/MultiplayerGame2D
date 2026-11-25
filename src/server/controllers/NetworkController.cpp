@@ -1,4 +1,5 @@
 #include "server/controllers/NetworkController.h"
+#include "shared/types/Intent.h"
 
 namespace server {
 
@@ -14,7 +15,8 @@ bool NetworkController::submit(shared::InputSeq seq, const shared::Intent& inten
 
 shared::Intent NetworkController::decide(const shared::ControlContext& ctx) {
     silence_ += ctx.dt;
-    return silence_ > TIMEOUT_SECONDS ? shared::Intent{} : latest_;
+    if (silence_ > TIMEOUT_SECONDS) return shared::Intent {};
+    return latest_;
 }
 
 }

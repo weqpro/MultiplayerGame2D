@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "server/CollisionQuery.h"
 #include "shared/WorldMap.h"
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
@@ -75,6 +76,7 @@ private:
     Events events_;
     shared::WorldMap worldMap_{};
     CameraWrapper cam_;
+    CollisionQuery colQuery_;
 };
 
 }

@@ -89,6 +89,13 @@ private:
     BitGrid collisions_ {};
 };
 
+class MapView {
+public:
+    MapView(const WorldMap& map) : map_{map} {}
+    bool isSolid(int x, int y) const { return map_.solid(x, y);}
+private:
+    const WorldMap& map_{};
+};
 }
 
 #endif

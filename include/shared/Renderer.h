@@ -10,12 +10,12 @@ namespace shared {
 
 class Renderer {
 public:
+    static constexpr size_t TILE = 16;
     void render(const EntityRegistry& entities, const WorldMap& map, Camera2D camera, EntityId localPawn = NULL_ENTITY) const;
     void renderMap(const WorldMap& map, const Rectangle& view) const;
     void loadAtlas(const std::filesystem::path& texturePath = "assets/textures.png");
 private:
     void drawEntity(const Entity& entity, bool local) const;
-    static constexpr size_t TILE = 16;
     Texture2D atlas_;
     Rectangle source(int index) const;
     static inline Rectangle CameraWorldRect(const Camera2D& cam) {
