@@ -16,10 +16,10 @@ public:
       : WanderController{home, leash},
         playerDistanceSqr_{playerDistance * playerDistance} {}
 
-    [[nodiscard]] shared::Intent decide(const shared::ControlContext& ctx) override;
+    [[nodiscard]] shared::Intent decide(const shared::WorldView& ctx) override;
 
 private:
-    std::optional<shared::EntityId> tryFindPlayer(const shared::ControlContext& ctx);
+    std::optional<shared::EntityId> tryFindPlayer(const shared::WorldView& ctx);
 
     std::optional<shared::EntityId> targetId_;
     float playerDistanceSqr_;

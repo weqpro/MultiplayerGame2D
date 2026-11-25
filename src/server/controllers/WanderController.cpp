@@ -28,7 +28,7 @@ Vector2 randomEdgePoint() {
 
 } // namespace
 
-shared::Intent WanderController::decide(const shared::ControlContext& ctx) {
+shared::Intent WanderController::decide(const shared::WorldView& ctx) {
     const Vector2 pos = ctx.self.body().pos;
     const float dx = pos.x - home_.x;
     const float dy = pos.y - home_.y;
@@ -54,7 +54,7 @@ shared::Intent WanderController::decide(const shared::ControlContext& ctx) {
             untilTurn_ = randomSeconds(2000, 3000);
         }
     }
-    return {.move = Vector2Scale(Vector2Normalize(heading_), WANDER_SPEED_)};
+    return {.controls = {.move = Vector2Scale(Vector2Normalize(heading_), WANDER_SPEED_)}};
 }
 
 }
