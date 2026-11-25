@@ -68,6 +68,7 @@ void ClientApp::onTick(uint64_t /*tick*/) {
     if (world_.pawn() == shared::NULL_ENTITY) {
         return;
     }
+    world_.tickVisuals(tickSeconds());
     if (!boundReady_) {
         auto& map = world_.worldMap();
         constexpr float TILE = 16.0f;
@@ -76,11 +77,11 @@ void ClientApp::onTick(uint64_t /*tick*/) {
     }
     auto me = world_.entities().find<shared::Player>(world_.pawn());
     if (!me) {
-        renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
+        renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks());
         return;
     }
     camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
-    renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
+    renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks());
 }
 
 void ClientApp::onShutDown() {

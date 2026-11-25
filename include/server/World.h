@@ -13,6 +13,7 @@
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
+#include "shared/Protocol.h"
 #include "shared/types/Ids.h"
 #include "shared/controllers/CameraController.h"
 
@@ -23,6 +24,7 @@ public:
     struct Events {
         std::vector<shared::EntityId> spawned;
         std::vector<shared::EntityId> despawned;
+        std::vector<shared::AttackEventInfo> attacks;
     };
 
     template <std::derived_from<shared::Entity> T, typename... Args>

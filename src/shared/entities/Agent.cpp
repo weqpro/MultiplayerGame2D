@@ -6,6 +6,7 @@
 
 #include <raymath.h>
 
+#include "shared/Protocol.h"
 #include "shared/entities/EntityRegistry.h"
 
 namespace shared {
@@ -43,6 +44,10 @@ void Agent::resolve(const MeleeAction& action, WorldView& ctx) {
         return;
     }
     startCooldown();
+
+    if (ctx.attackEvents) {
+        ctx.attackEvents->push_back({id(), body().pos, action.dir});
+    }
 
     const Vector2 origin = body().pos;
     const Vector2 facing = Vector2Normalize(action.dir);

@@ -89,7 +89,23 @@ struct MapMessage {
     MapInfo map {};
     static constexpr auto fields(auto& self) { return std::tie(self.map); }
 };
- 
+
+struct AttackEventInfo {
+    EntityId attacker{};
+    Vector2 origin{};
+    Vector2 dir{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.attacker, self.origin, self.dir); }
+};
+
+struct AttackEventMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    std::vector<AttackEventInfo> attacks;
+
+    static constexpr auto fields(auto& self) { return std::tie(self.attacks); }
+};
+
 template <typename V>
 struct ClientMessagesOf;
 
@@ -101,7 +117,7 @@ struct ClientMessagesOf<std::variant<As...>> {
 // Wire id = position in the list. Client and server are always built from the same source.
 // ControlsMessage = 0, then one ActionMessage<A> per Action alternative, in variant order.
 using ClientMessages = ClientMessagesOf<Action>::type;
-using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage, MapMessage>;
+using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage, MapMessage, AttackEventMessage>;
 
 
 }

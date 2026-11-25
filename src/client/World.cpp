@@ -55,6 +55,17 @@ void World::apply(const shared::SnapshotMessage& message) {
     }
 }
 
+void World::apply(const shared::AttackEventMessage& message) {
+    for (const auto& info : message.attacks) {
+        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f});
+    }
+}
+
+void World::tickVisuals(float dt) {
+    for (auto& a : activeAttacks_) a.timeLeft -= dt;
+    std::erase_if(activeAttacks_, [](const ActiveAttack& a) { return a.timeLeft <= 0.0f; });
+}
+
 std::optional<std::pair<shared::InputSeq, shared::Intent>> World::sampleIntent(float dt) {
     auto* pawn = registry_.find<shared::Agent>(pawn_);
     if (!pawn) {

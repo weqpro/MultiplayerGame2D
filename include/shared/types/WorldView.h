@@ -2,10 +2,13 @@
 #define SHARED_TYPES_WORLD_VIEW_H
 #include "shared/WorldMap.h"
 
+#include <vector>
+
 namespace shared {
 
 class Agent;
 class EntityRegistry;
+struct AttackEventInfo;
 
 struct WorldView {
     Agent& self;
@@ -13,6 +16,7 @@ struct WorldView {
     MapView& map;
     const Camera2D& cam;
     float dt;
+    std::vector<AttackEventInfo>* attackEvents = nullptr;
 };
 
 }

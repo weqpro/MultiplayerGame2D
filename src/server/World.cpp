@@ -26,7 +26,7 @@ void World::update(float dt) {
         decisions_.emplace_back(possession.pawn, possession.controller->decide(ctx));
     }
     for (auto& [pawn, intent] : decisions_) {
-        shared::WorldView ctx{*pawn, registry_, mapView_, cam_.camera, dt};
+        shared::WorldView ctx{*pawn, registry_, mapView_, cam_.camera, dt, &events_.attacks};
         pawn->act(intent, colQuery_, ctx);
     }
     despawnDead();

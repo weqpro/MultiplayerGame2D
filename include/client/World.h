@@ -3,6 +3,9 @@
 
 #include <optional>
 #include <utility>
+#include <vector>
+
+#include <raylib.h>
 
 #include "shared/WorldMap.h"
 #include "shared/Protocol.h"
@@ -14,6 +17,13 @@
 
 namespace client {
 
+struct ActiveAttack {
+    shared::EntityId attacker;
+    Vector2 origin;
+    Vector2 dir;
+    float timeLeft;
+};
+
 class World {
 public:
     void apply(const shared::PossessMessage& message);
@@ -21,6 +31,9 @@ public:
     void apply(const shared::DespawnMessage& message);
     void apply(const shared::SnapshotMessage& message);
     void apply(const shared::MapMessage& message);
+    void apply(const shared::AttackEventMessage& message);
+
+    void tickVisuals(float dt);
 
     [[nodiscard]] std::optional<std::pair<shared::InputSeq, shared::Intent>> sampleIntent(float dt);
 
@@ -29,6 +42,7 @@ public:
     [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
     [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
     [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
+    [[nodiscard]] const std::vector<ActiveAttack>& activeAttacks() const noexcept { return activeAttacks_; }
 
 private:
     shared::EntityRegistry registry_;
@@ -39,6 +53,7 @@ private:
     shared::WorldMap worldMap_{};
     shared::MapView mapView_{worldMap_};
     CameraWrapper cam_;
+    std::vector<ActiveAttack> activeAttacks_;
 
 };
 

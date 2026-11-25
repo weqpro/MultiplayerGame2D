@@ -50,6 +50,9 @@ void Replicator::replicateEvents(World& world) {
     if (!despawns.ids.empty()) {
         net_.broadcast(despawns);
     }
+    if (!events.attacks.empty()) {
+        net_.broadcast(shared::AttackEventMessage{.attacks = std::move(events.attacks)});
+    }
 }
 
 void Replicator::bootstrapJoiners(const World& world) {
