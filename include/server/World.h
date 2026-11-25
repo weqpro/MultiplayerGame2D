@@ -8,10 +8,13 @@
 #include <utility>
 #include <vector>
 
+#include "server/CollisionQuery.h"
+#include "shared/WorldMap.h"
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
 #include "shared/types/Ids.h"
+#include "shared/controllers/CameraController.h"
 
 namespace server {
 
@@ -56,6 +59,10 @@ public:
     [[nodiscard]] Events drainEvents();
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
+    [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
+    [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
+    [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
+    void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
 
 private:
     // Despawns every agent at 0 health. Runs after all actions, so same-tick hits all land.
@@ -72,6 +79,9 @@ private:
     Events events_;
     // Reused every tick so update() doesn't allocate once its capacity has grown.
     std::vector<std::pair<shared::Agent*, shared::Intent>> decisions_;
+    shared::WorldMap worldMap_{};
+    CameraWrapper cam_;
+    CollisionQuery colQuery_;
 };
 
 }

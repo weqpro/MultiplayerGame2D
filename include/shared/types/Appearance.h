@@ -8,7 +8,7 @@ namespace shared {
 
 struct Appearance {
     Color color{BLACK};
-    float radius{10.0f};
+    Vector2 size{5.0f, 5.0f};
 
     static constexpr auto fields(auto& self) { return std::tie(self.color, self.radius); }
 };

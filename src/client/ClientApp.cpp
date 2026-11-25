@@ -10,6 +10,8 @@
 
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
+#include "shared/entities/Player.h"
+#include "shared/types/Ids.h"
 
 namespace client {
 namespace {
@@ -39,6 +41,8 @@ bool ClientApp::onStartUp() {
         return false;
     }
 
+    renderer_.loadAtlas();
+
     return true;
 }
 
@@ -57,7 +61,22 @@ void ClientApp::onTick(uint64_t /*tick*/) {
             }
         }
     }
-    renderer_.render(world_.entities(), world_.pawn());
+    if (!mapReady_) {
+        return;
+    }
+    auto& [cam, camCtrl] = world_.camera();
+    if (world_.pawn() == shared::NULL_ENTITY) {
+        return;
+    }
+    if (!boundReady_) {
+        auto& map = world_.worldMap();
+        constexpr float TILE = 16.0f;
+        camCtrl.bounds = {0, 0, static_cast<float>(map.width()) * TILE, static_cast<float>(map.height()) * TILE};
+        boundReady_ = true;
+    }
+    auto me = world_.entities().find<shared::Player>(world_.pawn());
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
+    renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
 }
 
 void ClientApp::onShutDown() {

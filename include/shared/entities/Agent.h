@@ -4,6 +4,7 @@
 #include "shared/entities/Entity.h"
 #include "shared/types/Intent.h"
 #include "shared/types/Units.h"
+#include "server/CollisionQuery.h"
 #include "shared/types/WorldView.h"
 
 namespace shared {
@@ -20,7 +21,7 @@ struct Combat {
 
 class Agent : public Entity {
 public:
-    void act(const Intent& intent, WorldView& ctx);
+    void act(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView);
 
     [[nodiscard]] const Locomotion& locomotion() const noexcept { return locomotion_; }
     [[nodiscard]] const Combat& combat() const noexcept { return combat_; }
@@ -28,18 +29,19 @@ public:
     void takeDamage(HealthPoint damage) noexcept;
 
 protected:
-    Agent(EntityId id, const Body& body, const Appearance& look, const Locomotion& locomotion, const Combat& combat)
-        : Entity{id, body, look}, locomotion_{locomotion}, combat_{combat} {}
-
     void resolve(const MeleeAction& action, WorldView& ctx);
     void resolve(const ShootAction& action, WorldView& ctx);
     void resolve(const PickUpAction& action, WorldView& ctx);
 
-    virtual void doAct(const Controls& controls, const WorldView& ctx);
+    Agent(EntityId id, const Body& body, const Appearance& look, const Locomotion& locomotion,  const Combat& combat)
+        : Entity{id, body, look}, locomotion_{locomotion}, combat_{combat}, prevPos(body.pos) {}
+
+    virtual void doAct(const Controls& controls, float dt, const server::CollisionQuery& colQuery, WorldView& ctx);
 
 private:
     Locomotion locomotion_;
     Combat combat_;
+    Vector2 prevPos {};
     float cooldownLeft_{0.0f};
 
     [[nodiscard]] bool canAttack() const noexcept { return cooldownLeft_ <= 0.0f; }

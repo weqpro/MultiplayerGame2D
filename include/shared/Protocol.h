@@ -75,6 +75,21 @@ struct SnapshotMessage {
     static constexpr auto fields(auto& self) { return std::tie(self.tick, self.entities); }
 };
 
+struct MapInfo {
+    size_t width = 0;
+    size_t height = 0;
+    std::vector<uint16_t> layer;
+
+    static constexpr auto fields(auto& self) { return std::tie(self.width, self.height, self.layer); }
+};
+
+struct MapMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    MapInfo map {};
+    static constexpr auto fields(auto& self) { return std::tie(self.map); }
+};
+ 
 template <typename V>
 struct ClientMessagesOf;
 
@@ -87,6 +102,7 @@ struct ClientMessagesOf<std::variant<As...>> {
 // ControlsMessage = 0, then one ActionMessage<A> per Action alternative, in variant order.
 using ClientMessages = ClientMessagesOf<Action>::type;
 using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage>;
+
 
 }
 

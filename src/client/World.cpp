@@ -3,13 +3,19 @@
 #include <iostream>
 #include <utility>
 
+#include "shared/Protocol.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityFactory.h"
+#include "shared/WorldMap.h"
+#include "shared/entities/Player.h"
 
 namespace client {
 
 void World::apply(const shared::PossessMessage& message) {
     pawn_ = message.pawn;
+    auto me = entities().find<shared::Player>(pawn_);
+    auto& [cam, camCtrl] = camera();
+    camCtrl.snapTo(cam, me->body().pos);
 }
 
 void World::apply(const shared::SpawnMessage& message) {
@@ -22,11 +28,21 @@ void World::apply(const shared::SpawnMessage& message) {
         }
         registry_.insert(std::move(entity));
     }
+
 }
 
 void World::apply(const shared::DespawnMessage& message) {
     for (const shared::EntityId id : message.ids) {
         registry_.erase(id);
+    }
+}
+
+void World::apply(const shared::MapMessage& message) {
+    auto mapRes = shared::WorldMap::fromNetwork(message);
+    if (mapRes) {
+        worldMap_ = std::move(*mapRes);
+    } else {
+        std::cerr << "Something is wrong with mapMessage" << std::endl;
     }
 }
 

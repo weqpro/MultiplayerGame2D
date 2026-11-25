@@ -1,4 +1,5 @@
 #include "server/controllers/NetworkController.h"
+#include "shared/types/Intent.h"
 
 namespace server {
 
