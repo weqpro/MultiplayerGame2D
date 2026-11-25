@@ -20,14 +20,27 @@ void World::release(shared::EntityId pawn) {
 }
 
 void World::update(float dt) {
-    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions;
-    decisions.reserve(possessions_.size());
+    decisions_.clear();
     for (auto& [id, possession] : possessions_) {
-        const shared::ControlContext ctx{*possession.pawn, registry_, dt};
-        decisions.emplace_back(possession.pawn, possession.controller->decide(ctx));
+        shared::WorldView ctx{*possession.pawn, registry_, dt};
+        decisions_.emplace_back(possession.pawn, possession.controller->decide(ctx));
     }
-    for (auto& [pawn, intent] : decisions) {
-        pawn->act(intent, dt);
+    for (auto& [pawn, intent] : decisions_) {
+        shared::WorldView ctx{*pawn, registry_, dt};
+        pawn->act(intent, ctx);
+    }
+    despawnDead();
+}
+
+void World::despawnDead() {
+    std::vector<shared::EntityId> dead;
+    for (const shared::Agent& agent : registry_.all<shared::Agent>()) {
+        if (agent.body().health <= 0.0f) {
+            dead.push_back(agent.id());
+        }
+    }
+    for (const shared::EntityId id : dead) {
+        despawn(id);
     }
 }
 

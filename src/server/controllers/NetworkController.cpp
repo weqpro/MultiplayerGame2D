@@ -3,20 +3,38 @@
 
 namespace server {
 
-bool NetworkController::submit(shared::InputSeq seq, const shared::Intent& intent) {
+bool NetworkController::submit(shared::InputSeq seq, const shared::Controls& controls) {
     if (seq <= lastSeq_) {
         return false;
     }
     lastSeq_ = seq;
-    latest_ = shared::sanitize(intent); // TODO: not sanitize twice
+    latest_ = shared::sanitize(controls); // TODO: not sanitize twice
     silence_ = 0.0f;
     return true;
 }
 
-shared::Intent NetworkController::decide(const shared::ControlContext& ctx) {
+bool NetworkController::enqueue(const shared::Action& action) {
+    const auto sanitized = shared::sanitize(action);
+    return sanitized && pending_.push_back(*sanitized);
+}
+
+shared::Intent NetworkController::decide(const shared::WorldView& ctx) {
     silence_ += ctx.dt;
-    if (silence_ > TIMEOUT_SECONDS) return shared::Intent {};
-    return latest_;
+
+    shared::Intent intent;
+    if (silence_ <= TIMEOUT_SECONDS) {
+        intent.controls = latest_;
+    }
+
+    std::size_t taken = 0;
+    for (const shared::Action& action : pending_) {
+        if (!intent.actions.push_back(action)) {
+            break;
+        }
+        ++taken;
+    }
+    pending_.dropFront(taken);
+    return intent;
 }
 
 }

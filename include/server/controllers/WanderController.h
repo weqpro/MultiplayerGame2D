@@ -7,17 +7,19 @@
 
 namespace server {
 
-class WanderController final : public shared::IController {
+class WanderController : public shared::IController {
 public:
-    WanderController(Vector2 home, float leash) : home_{home}, leash_{leash} {}
+    WanderController(Vector2 home, float leash) : home_{home}, leash_{leash} {} // TODO: add wander speed to ctor
 
-    [[nodiscard]] shared::Intent decide(const shared::ControlContext& ctx) override;
+    [[nodiscard]] shared::Intent decide(const shared::WorldView& ctx) override;
 
 private:
     Vector2 home_;
     float leash_;
     Vector2 heading_{};
     float untilTurn_{0.0f};
+
+    static constexpr float WANDER_SPEED_ = 0.5f;
 };
 
 }

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "shared/Messages.h"
@@ -50,8 +51,14 @@ void ClientApp::onTick(uint64_t /*tick*/) {
         stop();
     }
     if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
-        if (const auto intent = world_.sampleIntent(tickSeconds())) {
-            context_.send(peer_, *intent);
+        if (const auto sample = world_.sampleIntent(tickSeconds())) {
+            const auto& [seq, intent] = *sample;
+            context_.send(peer_, shared::ControlsMessage{.seq = seq, .controls = intent.controls});
+            for (const shared::Action& action : intent.actions) {
+                std::visit([this](const auto& a) {
+                    context_.send(peer_, shared::ActionMessage<std::remove_cvref_t<decltype(a)>>{a});
+                }, action);
+            }
         }
     }
     if (!mapReady_) {
@@ -91,43 +98,14 @@ void ClientApp::onConnect(ENetPeer* /*peer*/) {
     std::cout << "Connected to server.\n";
 }
 
-template <shared::Message M>
-void ClientApp::dispatch(std::span<const std::byte> data) {
-    const auto packet = shared::Packet<M>::deserialize(data);
-    if (!packet) {
-        //TODO: handle
-        std::cout << "Deserialize failed for message type " << static_cast<int>(M::TYPE) << std::endl;
-        return;
-    }
-    world_.apply(packet->message);
-}
-
 void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*channelID*/) {
     const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-    const auto type = shared::peek_type(data);
-    if (!type) {
+    const auto result = shared::dispatch<shared::ServerMessages>(data, [this](const auto& message) {
+        world_.apply(message);
+    });
+    if (result != shared::DispatchResult::OK) {
         //TODO: handle
-        std::cout << "Invalid type" << std::endl;
-        return;
-    }
-    switch (*type) {
-        case shared::MessageType::POSSESS:
-            dispatch<shared::PossessMessage>(data);
-            break;
-        case shared::MessageType::SPAWN:
-            dispatch<shared::SpawnMessage>(data);
-            break;
-        case shared::MessageType::DESPAWN:
-            dispatch<shared::DespawnMessage>(data);
-            break;
-        case shared::MessageType::SNAPSHOT:
-            dispatch<shared::SnapshotMessage>(data);
-            break;
-        case shared::MessageType::MAP:
-            dispatch<shared::MapMessage>(data);
-            mapReady_ = true;
-        default:
-            break;
+        std::cout << "Bad packet (" << static_cast<int>(result) << ")" << std::endl;
     }
 }
 

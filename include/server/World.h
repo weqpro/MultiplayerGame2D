@@ -65,6 +65,9 @@ public:
     void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
 
 private:
+    // Despawns every agent at 0 health. Runs after all actions, so same-tick hits all land.
+    void despawnDead();
+
     struct Possession {
         shared::Agent* pawn;
         std::unique_ptr<shared::IController> controller;
@@ -74,6 +77,8 @@ private:
     std::unordered_map<shared::EntityId, Possession> possessions_;
     shared::EntityId nextId_{1};
     Events events_;
+    // Reused every tick so update() doesn't allocate once its capacity has grown.
+    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions_;
     shared::WorldMap worldMap_{};
     CameraWrapper cam_;
     CollisionQuery colQuery_;

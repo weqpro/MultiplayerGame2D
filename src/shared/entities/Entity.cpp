@@ -5,7 +5,7 @@
 namespace shared {
 
 SpawnInfo Entity::describe() const {
-    return SpawnInfo{
+    return SpawnInfo {
         .id = id_,
         .kind = kind(),
         .body = body_,

@@ -9,6 +9,7 @@
 
 #include "server/controllers/NetworkController.h"
 #include "server/controllers/WanderController.h"
+#include "server/controllers/ZombieController.h"
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
 #include "shared/controllers/KeyboardController.h"
@@ -69,7 +70,7 @@ bool ServerApp::onStartUp() {
         const Vector2 home = randomPoint(250, 550, 120, 330);
         auto& npc = world_.spawn<shared::NPC>(shared::Body{.pos = home},
                                               shared::Appearance{.color = GRAY, .radius = 7.0f});
-        world_.possess<WanderController>(npc, home, NPC_LEASH);
+        world_.possess<ZombieController>(npc, home, NPC_LEASH, 120.0f);
     }
     return true;
 }
@@ -116,32 +117,33 @@ void ServerApp::onConnect(ENetPeer* peer) {
 
 void ServerApp::onReceive(ENetPeer* peer, ENetPacket* packet, uint8_t /*channelID*/) {
     const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-    const auto type = shared::peek_type(data);
-    if (!type) {
+    const auto result = shared::dispatch<shared::ClientMessages>(data, [this, peer](const auto& message) {
+        handle(peer, message);
+    });
+    if (result != shared::DispatchResult::OK) {
         //TODO: handle
-        std::cout << "Invalid type" << std::endl;
-        return;
+        std::cout << "Bad packet (" << static_cast<int>(result) << ")" << std::endl;
     }
-    switch (*type) {
-        case shared::MessageType::INTENT: {
-            const auto received = shared::Packet<shared::IntentMessage>::deserialize(data);
-            if (!received) {
-                //TODO: handle
-                std::cout << "Deserialize failed" << std::endl;
-                break;
-            }
-            const auto session = sessions_.find(peer);
-            if (session == sessions_.end()) {
-                break;
-            }
-            if (auto* controller = world_.controllerOf<NetworkController>(session->second)) {
-                controller->submit(received->message.seq, received->message.intent);
-            }
-            break;
-        }
-        default:
-            break;
+}
+
+void ServerApp::handle(ENetPeer* peer, const shared::ControlsMessage& message) {
+    if (auto* controller = networkControllerOf(peer)) {
+        controller->submit(message.seq, message.controls);
     }
+}
+
+void ServerApp::enqueueAction(ENetPeer* peer, const shared::Action& action) {
+    if (auto* controller = networkControllerOf(peer)) {
+        controller->enqueue(action);
+    }
+}
+
+NetworkController* ServerApp::networkControllerOf(ENetPeer* peer) {
+    const auto session = sessions_.find(peer);
+    if (session == sessions_.end()) {
+        return nullptr;
+    }
+    return world_.controllerOf<NetworkController>(session->second);
 }
 
 void ServerApp::onDisconnect(ENetPeer* peer) {

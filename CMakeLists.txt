@@ -54,6 +54,7 @@ add_library(GameShared STATIC
   src/shared/entities/Entity.cpp
   src/shared/entities/EntityFactory.cpp
   src/shared/entities/EntityRegistry.cpp
+  src/shared/types/Action.cpp
   src/shared/types/Intent.cpp
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
@@ -82,6 +83,7 @@ target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads
 add_executable(MultiplayerGame2D_Server
   src/server/controllers/NetworkController.cpp
   src/server/controllers/WanderController.cpp
+  src/server/controllers/ZombieController.cpp
   src/server/Replicator.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp

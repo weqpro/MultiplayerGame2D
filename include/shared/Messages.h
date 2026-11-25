@@ -1,6 +1,8 @@
 #ifndef SHARED_MESSAGES_H
 #define SHARED_MESSAGES_H
 
+#include <algorithm>
+#include <array>
 #include <concepts>
 #include <type_traits>
 #include <cstddef>
@@ -11,22 +13,13 @@
 #include <vector>
 #include <limits>
 #include <ranges>
+#include <utility>
 
 #include <raylib.h>
 
 #include "shared/Serialization.h"
 
 namespace shared {
-
-enum class MessageType : uint16_t {
-    INTENT,
-    POSSESS,
-    SPAWN,
-    DESPAWN,
-    SNAPSHOT,
-    MAP,
-    COUNT
-};
 
 template <typename T>
 struct ExternalFields {};
@@ -140,63 +133,83 @@ template <typename T>
 template <typename T>
 concept Message =
     Structured<T> &&
-    std::default_initializable<T> &&
-    std::same_as<std::remove_cv_t<decltype(T::TYPE)>, MessageType>;
+    std::default_initializable<T>;
 
-[[nodiscard]] constexpr std::optional<MessageType> peek_type(std::span<const std::byte> bytes) noexcept {
-    using U = std::underlying_type_t<MessageType>;
-    Reader r{bytes};
-    const auto type = r.read<MessageType>();
-    if (!r.ok() || static_cast<U>(type) >= static_cast<U>(MessageType::COUNT)) {
-        return std::nullopt;
+using WireId = std::uint16_t;
+
+enum class DispatchResult {
+    OK,
+    UNKNOWN_ID,
+    MALFORMED
+};
+
+template <typename T, typename... Ts>
+inline constexpr std::size_t count_of = (std::size_t{std::same_as<T, Ts>} + ... + 0);
+
+template <typename... Ts>
+inline constexpr bool distinct = ((count_of<Ts, Ts...> == 1) && ...);
+
+template <Message M, typename Handler>
+DispatchResult decodeAndHandle(Reader& r, Handler& handler) {
+    M message{};
+    decode(r, message);
+    if (!r.ok() || r.remaining() != 0) {
+        return DispatchResult::MALFORMED;
     }
-    return type;
+    handler(std::as_const(message));
+    return DispatchResult::OK;
 }
 
-template <Message M>
-struct Packet {
-    static constexpr MessageType TYPE = M::TYPE;
-    static constexpr std::size_t HEADER_SIZE = sizeof(MessageType);
- 
-    M message;
- 
-    [[nodiscard]] constexpr std::size_t size() const {
-        return HEADER_SIZE + encoded_size(message);
-    }
- 
-    [[nodiscard]] constexpr std::size_t serialize(std::span<std::byte> out) const {
-        Writer w{out};
-        w.write(TYPE);
-        encode(w, message);
-        return w.ok() ? w.written() : 0;
-    }
- 
-    [[nodiscard]] std::optional<std::vector<std::byte>> serialize() const {
-        std::vector<std::byte> buf(size());
-        if (serialize(std::span{buf}) == 0) {
-            return std::nullopt;
-        }
-        return buf;
-    }
- 
-    [[nodiscard]] static constexpr std::optional<Packet> deserialize(std::span<const std::byte> bytes) {
-        Reader r{bytes};
-        const auto type = r.read<MessageType>();
-        if (!r.ok() || type != TYPE) {
-            return std::nullopt;
-        }
-        Packet packet{};
-        decode(r, packet.message);
-        if (!r.ok() || r.remaining() != 0) {
-            return std::nullopt;
-        }
-        return packet;
+// Wire id of a message = its position in the list.
+template <Message... Ms>
+struct MessageList {
+    static_assert(sizeof...(Ms) > 0);
+    static_assert(sizeof...(Ms) <= std::size_t{std::numeric_limits<WireId>::max()} + 1, "too many messages for WireId");
+    static_assert(distinct<Ms...>, "a message appears twice in the list");
+
+    template <typename M>
+    static constexpr bool contains = (std::same_as<M, Ms> || ...);
+
+    template <typename M>
+        requires contains<M>
+    static constexpr WireId idOf = [] {
+        constexpr std::array matches{std::same_as<M, Ms>...};
+        return static_cast<WireId>(std::ranges::find(matches, true) - matches.begin());
+    }();
+
+    // Expands to `(id == 0 && decode<M0>) || (id == 1 && decode<M1>) || ...`, lowered like a switch.
+    template <typename Handler>
+    static DispatchResult dispatch(Reader& r, WireId id, Handler& handler) {
+        auto result = DispatchResult::UNKNOWN_ID;
+        [&]<std::size_t... I>(std::index_sequence<I...>) {
+            (void)((id == I && (result = decodeAndHandle<Ms>(r, handler), true)) || ...);
+        }(std::index_sequence_for<Ms...>{});
+        return result;
     }
 };
 
-template <Message M>
-Packet(M) -> Packet<M>; // клодік сказав, шо мало б без цього всюди воркати, але clang може і не справитись
-// clang 17+, GCC 11+ and MSVC 19.27+
+template <typename List, Message M>
+    requires List::template contains<M>
+[[nodiscard]] std::optional<std::vector<std::byte>> encodeMessage(const M& message) {
+    std::vector<std::byte> buf(sizeof(WireId) + encoded_size(message));
+    Writer w{buf};
+    w.write(List::template idOf<M>);
+    encode(w, message);
+    if (!w.ok()) {
+        return std::nullopt;
+    }
+    return buf;
+}
+
+template <typename List, typename Handler>
+DispatchResult dispatch(std::span<const std::byte> bytes, Handler&& handler) {
+    Reader r{bytes};
+    const auto id = r.read<WireId>();
+    if (!r.ok()) {
+        return DispatchResult::MALFORMED;
+    }
+    return List::dispatch(r, id, handler);
+}
 
 }
 
