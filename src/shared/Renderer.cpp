@@ -61,15 +61,23 @@ void Renderer::drawEntity(const Entity& entity, bool local) const {
     const Vector2 pos = entity.body().pos;
     const Appearance& look = entity.appearance();
 
-    DrawCircleV(pos, look.radius, look.color);
+    const Rectangle rect = {
+        pos.x - look.size.x / 2, pos.y - look.size.y / 2,
+        look.size.x, look.size.y
+    };
+    DrawRectangleRec(rect, look.color);
     if (local) {
-        DrawCircleLinesV(pos, look.radius + LOCAL_RING_GAP, look.color);
+        const Rectangle ring = {
+            rect.x - LOCAL_RING_GAP, rect.y - LOCAL_RING_GAP,
+            rect.width + LOCAL_RING_GAP * 2, rect.height + LOCAL_RING_GAP * 2
+        };
+        DrawRectangleLinesEx(ring, 1.0f, look.color);
     }
 
     const std::string label{entity.label()};
     if (!label.empty()) {
         const int width = MeasureText(label.c_str(), LABEL_FONT_SIZE);
-        const float top = pos.y - look.radius - LABEL_GAP - static_cast<float>(LABEL_FONT_SIZE);
+        const float top = pos.y - look.size.y / 2 - LABEL_GAP - static_cast<float>(LABEL_FONT_SIZE);
         DrawText(label.c_str(), static_cast<int>(pos.x) - width / 2, static_cast<int>(top), LABEL_FONT_SIZE, DARKGRAY);
     }
 }

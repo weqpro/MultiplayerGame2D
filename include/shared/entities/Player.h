@@ -19,15 +19,23 @@ public:
     Player(EntityId id, const Body& body, const Appearance& look,
            std::convertible_to<std::string> auto&& username)
       : Agent{id, body, look, LOCOMOTION, COMBAT},
-        username_(std::forward<decltype(username)>(username)) {}
+        username_(std::forward<decltype(username)>(username)),
+        prevPos_(body.pos) {}
 
     [[nodiscard]] EntityKind kind() const noexcept override { return KIND; }
     [[nodiscard]] std::string_view label() const noexcept override { return username_; }
 
     [[nodiscard]] const std::string& username() const noexcept { return username_; }
+    [[nodiscard]] Vector2 prevPos() const noexcept { return prevPos_; }
 
 private:
+    void doAct(const Controls& controls, const server::CollisionQuery& colQuery, WorldView& ctx) override {
+        prevPos_ = body().pos;
+        Agent::doAct(controls, colQuery, ctx);
+    }
+
     std::string username_;
+    Vector2 prevPos_ {};
 };
 
 }

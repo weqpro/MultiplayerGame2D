@@ -13,8 +13,8 @@ Hit CollisionQuery::sweepTwo(const AABB& box, Vector2 delta, const AABB& other) 
     const Vector2 low = {
         other.min.x - h.x, other.min.y - h.y };
     const Vector2 high = {
-        other.min.x + h.x,
-        other.min.y + h.y
+        other.max.x + h.x,
+        other.max.y + h.y
     };
 
 
@@ -48,7 +48,7 @@ Hit CollisionQuery::sweepTwo(const AABB& box, Vector2 delta, const AABB& other) 
     }
 
     const float tEnter = std::max(xRange->x, yRange->x);
-    const float tExit  = std::min(xRange->y, yRange->x);
+    const float tExit  = std::min(xRange->y, yRange->y);
     if (tEnter >= tExit || tEnter < 0.0f || tEnter > 1.0f) return {};
 
     Hit r;
@@ -88,6 +88,7 @@ MoveResult CollisionQuery::move(Vector2 pos, AABB& aabb, Vector2 delta, shared::
     constexpr float EPS = 1e-8f;
 
     MoveResult res;
+    res.lastValidPos = pos;
     for (int i = 0; i < MAX_ITER && (delta.x * delta.x + delta.y * delta.y) > EPS; ++i) {
         Hit h = sweepRegion(aabb, delta, ctx);
 
@@ -100,6 +101,10 @@ MoveResult CollisionQuery::move(Vector2 pos, AABB& aabb, Vector2 delta, shared::
 
         pos.x += delta.x * h.time + h.normal.x * GAP;
         pos.y += delta.y * h.time + h.normal.y * GAP;
+
+        Vector2 halves = aabb.getHalves();
+        aabb.min = {pos.x - halves.x, pos.y - halves.y};
+        aabb.max = {pos.x + halves.x, pos.y + halves.y};
 
         Vector2 rest;
         rest.x = delta.x * (1.f - h.time);

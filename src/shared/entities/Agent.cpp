@@ -15,18 +15,26 @@ constexpr float MELEE_ARC_COS = 0.5f;
 
 } // namespace
 
-void Agent::act(const Intent& intent, WorldView& ctx) {
+void Agent::act(const Intent& intent, const server::CollisionQuery& colQuery, WorldView& ctx) {
     cooldownLeft_ = std::max(0.0f, cooldownLeft_ - ctx.dt);
-    doAct(sanitize(intent.controls), ctx);
+    doAct(sanitize(intent.controls), colQuery, ctx);
     for (const Action& action : intent.actions) {
         std::visit([this, &ctx](const auto& a) { resolve(a, ctx); }, action);
     }
 }
 
-void Agent::doAct(const Controls& controls, const WorldView& ctx) {
+void Agent::doAct(const Controls& controls, const server::CollisionQuery& colQuery, WorldView& ctx) {
     Body next = body();
-    next.pos.x += controls.move.x * locomotion_.speed * ctx.dt;
-    next.pos.y += controls.move.y * locomotion_.speed * ctx.dt;
+    Vector2 delta = {
+        controls.move.x * locomotion_.speed * ctx.dt,
+        controls.move.y * locomotion_.speed * ctx.dt
+    };
+    server::AABB aabb = {
+        {body().pos.x - appearance().size.x / 2, body().pos.y - appearance().size.y / 2},
+        {body().pos.x + appearance().size.x / 2, body().pos.y + appearance().size.y / 2}
+    };
+    server::MoveResult res = colQuery.move(body().pos, aabb, delta, ctx);
+    next.pos = res.lastValidPos;
     setBody(next);
 }
 
@@ -61,30 +69,16 @@ void Agent::resolve(const PickUpAction& /*action*/, WorldView& /*ctx*/) {
 }
 
 bool Agent::inReach(const Entity& target) const noexcept {
-    const float gap = Vector2Distance(body().pos, target.body().pos)
-                    - appearance().radius - target.appearance().radius;
-    return gap <= combat_.reach;
+    const float dx = std::abs(body().pos.x - target.body().pos.x);
+    const float dy = std::abs(body().pos.y - target.body().pos.y);
+    const float gapX = std::max(0.0f, dx - appearance().size.x / 2 - target.appearance().size.x / 2);
+    const float gapY = std::max(0.0f, dy - appearance().size.y / 2 - target.appearance().size.y / 2);
+    return gapX * gapX + gapY * gapY <= combat_.reach * combat_.reach;
 }
 
 void Agent::takeDamage(HealthPoint damage) noexcept {
     Body next = body();
     next.health = std::max(0_hp, next.health - damage);
-void Agent::act(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView) {
-    doAct(sanitize(intent), dt, colQuery, worldView);
-}
-
-void Agent::doAct(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView) {
-    Body next = body();
-    prevPos = body().pos;
-    Vector2 delta = {
-        intent.move.x * locomotion_.speed * dt,
-        intent.move.y * locomotion_.speed * dt
-    };
-    server::AABB aabb = {
-        {body().pos.x - appearance().size.x / 2, body().pos.y - appearance().size.y / 2},
-        {body().pos.x + appearance().size.x / 2, body().pos.y + appearance().size.y / 2}
-    };
-    server::MoveResult res = colQuery.move(body().pos, aabb, delta, worldView);
     setBody(next);
 }
 

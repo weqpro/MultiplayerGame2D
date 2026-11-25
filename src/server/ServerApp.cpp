@@ -69,7 +69,7 @@ bool ServerApp::onStartUp() {
     for (int i = 0; i < NPC_COUNT; ++i) {
         const Vector2 home = randomPoint(250, 550, 120, 330);
         auto& npc = world_.spawn<shared::NPC>(shared::Body{.pos = home},
-                                              shared::Appearance{.color = GRAY, .radius = 7.0f});
+                                              shared::Appearance{.color = GRAY, .size = {12.0f, 12.0f}});
         world_.possess<ZombieController>(npc, home, NPC_LEASH, 120.0f);
     }
     return true;
@@ -171,7 +171,11 @@ void ServerApp::onTick(uint64_t tick) {
 
     auto& [cam, camCtrl] = world_.camera();
     auto me = world_.entities().find<shared::Player>(hostPawn_);
-    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
+    if (!me) {
+        renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_);
+        return;
+    }
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
     renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_);
 }
 

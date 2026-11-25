@@ -80,6 +80,7 @@ private:
     // Reused every tick so update() doesn't allocate once its capacity has grown.
     std::vector<std::pair<shared::Agent*, shared::Intent>> decisions_;
     shared::WorldMap worldMap_{};
+    shared::MapView mapView_{worldMap_};
     CameraWrapper cam_;
     CollisionQuery colQuery_;
 };

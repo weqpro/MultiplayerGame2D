@@ -75,7 +75,11 @@ void ClientApp::onTick(uint64_t /*tick*/) {
         boundReady_ = true;
     }
     auto me = world_.entities().find<shared::Player>(world_.pawn());
-    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos);
+    if (!me) {
+        renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
+        return;
+    }
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
     renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn());
 }
 
@@ -102,6 +106,9 @@ void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*chan
     const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
     const auto result = shared::dispatch<shared::ServerMessages>(data, [this](const auto& message) {
         world_.apply(message);
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(message)>, shared::MapMessage>) {
+            mapReady_ = true;
+        }
     });
     if (result != shared::DispatchResult::OK) {
         //TODO: handle

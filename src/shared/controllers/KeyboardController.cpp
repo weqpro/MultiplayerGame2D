@@ -22,7 +22,8 @@ Intent KeyboardController::decide(const WorldView& ctx) {
         intent.controls.move.x -= 1.0f;
     }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        const Vector2 toMouse = Vector2Subtract(GetMousePosition(), ctx.self.body().pos);
+        const Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), ctx.cam);
+        const Vector2 toMouse = Vector2Subtract(worldMouse, ctx.self.body().pos);
         intent.actions.push_back(MeleeAction{.dir = Vector2Normalize(toMouse)});
     }
     return intent;

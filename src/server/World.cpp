@@ -22,12 +22,12 @@ void World::release(shared::EntityId pawn) {
 void World::update(float dt) {
     decisions_.clear();
     for (auto& [id, possession] : possessions_) {
-        shared::WorldView ctx{*possession.pawn, registry_, dt};
+        shared::WorldView ctx{*possession.pawn, registry_, mapView_, cam_.camera, dt};
         decisions_.emplace_back(possession.pawn, possession.controller->decide(ctx));
     }
     for (auto& [pawn, intent] : decisions_) {
-        shared::WorldView ctx{*pawn, registry_, dt};
-        pawn->act(intent, ctx);
+        shared::WorldView ctx{*pawn, registry_, mapView_, cam_.camera, dt};
+        pawn->act(intent, colQuery_, ctx);
     }
     despawnDead();
 }

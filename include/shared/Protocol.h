@@ -101,7 +101,7 @@ struct ClientMessagesOf<std::variant<As...>> {
 // Wire id = position in the list. Client and server are always built from the same source.
 // ControlsMessage = 0, then one ActionMessage<A> per Action alternative, in variant order.
 using ClientMessages = ClientMessagesOf<Action>::type;
-using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage>;
+using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage, MapMessage>;
 
 
 }

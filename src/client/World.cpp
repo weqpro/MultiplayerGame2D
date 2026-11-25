@@ -13,9 +13,6 @@ namespace client {
 
 void World::apply(const shared::PossessMessage& message) {
     pawn_ = message.pawn;
-    auto me = entities().find<shared::Player>(pawn_);
-    auto& [cam, camCtrl] = camera();
-    camCtrl.snapTo(cam, me->body().pos);
 }
 
 void World::apply(const shared::SpawnMessage& message) {
@@ -63,7 +60,7 @@ std::optional<std::pair<shared::InputSeq, shared::Intent>> World::sampleIntent(f
     if (!pawn) {
         return std::nullopt;
     }
-    shared::WorldView ctx{*pawn, registry_, dt};
+    shared::WorldView ctx{*pawn, registry_, mapView_, cam_.camera, dt};
     return std::pair{nextSeq_++, input_.decide(ctx)};
 }
 

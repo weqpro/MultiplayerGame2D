@@ -37,6 +37,7 @@ private:
     shared::InputSeq nextSeq_{1};
     std::optional<shared::Tick> lastTick_;
     shared::WorldMap worldMap_{};
+    shared::MapView mapView_{worldMap_};
     CameraWrapper cam_;
 
 };

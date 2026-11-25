@@ -21,12 +21,15 @@ struct Combat {
 
 class Agent : public Entity {
 public:
-    void act(const Intent& intent, float dt, const server::CollisionQuery& colQuery, WorldView& worldView);
+    void act(const Intent& intent, const server::CollisionQuery& colQuery, WorldView& worldView);
 
     [[nodiscard]] const Locomotion& locomotion() const noexcept { return locomotion_; }
     [[nodiscard]] const Combat& combat() const noexcept { return combat_; }
 
     void takeDamage(HealthPoint damage) noexcept;
+
+    [[nodiscard]] bool canAttack() const noexcept { return cooldownLeft_ <= 0.0f; }
+    [[nodiscard]] bool inReach(const Entity& target) const noexcept;
 
 protected:
     void resolve(const MeleeAction& action, WorldView& ctx);
@@ -34,20 +37,16 @@ protected:
     void resolve(const PickUpAction& action, WorldView& ctx);
 
     Agent(EntityId id, const Body& body, const Appearance& look, const Locomotion& locomotion,  const Combat& combat)
-        : Entity{id, body, look}, locomotion_{locomotion}, combat_{combat}, prevPos(body.pos) {}
+        : Entity{id, body, look}, locomotion_{locomotion}, combat_{combat} {}
 
-    virtual void doAct(const Controls& controls, float dt, const server::CollisionQuery& colQuery, WorldView& ctx);
+    virtual void doAct(const Controls& controls, const server::CollisionQuery& colQuery, WorldView& ctx);
 
 private:
     Locomotion locomotion_;
     Combat combat_;
-    Vector2 prevPos {};
     float cooldownLeft_{0.0f};
 
-    [[nodiscard]] bool canAttack() const noexcept { return cooldownLeft_ <= 0.0f; }
     void startCooldown() noexcept { cooldownLeft_ = combat_.cooldown; }
-
-    [[nodiscard]] bool inReach(const Entity& target) const noexcept;
 };
 
 }

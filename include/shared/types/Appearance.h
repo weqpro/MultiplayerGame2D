@@ -8,9 +8,9 @@ namespace shared {
 
 struct Appearance {
     Color color{BLACK};
-    Vector2 size{5.0f, 5.0f};
+    Vector2 size{12.0f, 12.0f};
 
-    static constexpr auto fields(auto& self) { return std::tie(self.color, self.radius); }
+    static constexpr auto fields(auto& self) { return std::tie(self.color, self.size); }
 };
 
 }

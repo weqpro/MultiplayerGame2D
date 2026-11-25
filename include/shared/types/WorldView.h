@@ -11,6 +11,7 @@ struct WorldView {
     Agent& self;
     EntityRegistry& world;
     MapView& map;
+    const Camera2D& cam;
     float dt;
 };
 
