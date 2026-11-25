@@ -7,7 +7,7 @@
 
 namespace shared {
 
-Intent KeyboardController::decide(const ControlContext& ctx) {
+Intent KeyboardController::decide(const WorldView& ctx) {
     Intent intent;
     if (IsKeyDown(KEY_W)) {
         intent.controls.move.y -= 1.0f;

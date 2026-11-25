@@ -15,7 +15,7 @@
 
 namespace server {
 
-shared::Intent ZombieController::decide(const shared::ControlContext& ctx) {
+shared::Intent ZombieController::decide(const shared::WorldView& ctx) {
     const Vector2 selfPos = ctx.self.body().pos;
 
     const shared::Entity* target = targetId_ ? ctx.world.find(*targetId_) : nullptr;
@@ -37,7 +37,7 @@ shared::Intent ZombieController::decide(const shared::ControlContext& ctx) {
     return intent;
 }
 
-std::optional<shared::EntityId> ZombieController::tryFindPlayer(const shared::ControlContext& ctx) {
+std::optional<shared::EntityId> ZombieController::tryFindPlayer(const shared::WorldView& ctx) {
     const Vector2 selfPos = ctx.self.body().pos;
 
     auto nearby = ctx.world.all<shared::Player>()

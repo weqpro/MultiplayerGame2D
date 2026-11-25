@@ -22,7 +22,7 @@ public:
     // Returns false if the action is invalid or the queue is full.
     bool enqueue(const shared::Action& action);
 
-    [[nodiscard]] shared::Intent decide(const shared::ControlContext& ctx) override;
+    [[nodiscard]] shared::Intent decide(const shared::WorldView& ctx) override;
 
 private:
     shared::Controls latest_{};

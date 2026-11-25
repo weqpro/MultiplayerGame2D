@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <concepts>
 
 #include "shared/entities/Agent.h"
 
@@ -15,8 +16,10 @@ public:
     static constexpr Locomotion LOCOMOTION{.speed = 67.0f};
     static constexpr Combat COMBAT{.damage = 25_hp, .reach = 6.0f, .cooldown = 0.4f};
 
-    Player(EntityId id, const Body& body, const Appearance& look, std::string username)
-        : Agent{id, body, look, LOCOMOTION, COMBAT}, username_{std::move(username)} {}
+    Player(EntityId id, const Body& body, const Appearance& look,
+           std::convertible_to<std::string> auto&& username)
+      : Agent{id, body, look, LOCOMOTION, COMBAT},
+        username_(std::forward<decltype(username)>(username)) {}
 
     [[nodiscard]] EntityKind kind() const noexcept override { return KIND; }
     [[nodiscard]] std::string_view label() const noexcept override { return username_; }

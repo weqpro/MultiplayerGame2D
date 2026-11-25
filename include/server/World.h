@@ -11,7 +11,6 @@
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
-#include "shared/types/Action.h"
 #include "shared/types/Ids.h"
 
 namespace server {
@@ -59,10 +58,6 @@ public:
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
 
 private:
-    void resolve(shared::Agent& actor, const shared::MeleeAction& action);
-    void resolve(shared::Agent& actor, const shared::ShootAction& action);
-    void resolve(shared::Agent& actor, const shared::PickUpAction& action);
-
     // Despawns every agent at 0 health. Runs after all actions, so same-tick hits all land.
     void despawnDead();
 

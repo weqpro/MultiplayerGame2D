@@ -7,7 +7,7 @@ namespace shared {
 
 class KeyboardController final : public IController {
 public:
-    [[nodiscard]] Intent decide(const ControlContext& ctx) override;
+    [[nodiscard]] Intent decide(const WorldView& ctx) override;
 };
 
 }

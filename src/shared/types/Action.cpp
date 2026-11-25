@@ -34,7 +34,7 @@ std::optional<Action> sanitizeOne(PickUpAction action) noexcept {
 
 std::optional<Action> sanitize(const Action& action) noexcept {
     std::optional<Action> result;
-    visitAction(action, [&result](const auto& a) { result = sanitizeOne(a); });
+    std::visit([&result](const auto& a) { result = sanitizeOne(a); }, action);
     return result;
 }
 

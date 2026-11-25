@@ -43,11 +43,12 @@ void World::apply(const shared::SnapshotMessage& message) {
 }
 
 std::optional<std::pair<shared::InputSeq, shared::Intent>> World::sampleIntent(float dt) {
-    const auto* pawn = registry_.find<shared::Agent>(pawn_);
+    auto* pawn = registry_.find<shared::Agent>(pawn_);
     if (!pawn) {
         return std::nullopt;
     }
-    return std::pair{nextSeq_++, input_.decide({*pawn, registry_, dt})};
+    shared::WorldView ctx{*pawn, registry_, dt};
+    return std::pair{nextSeq_++, input_.decide(ctx)};
 }
 
 }

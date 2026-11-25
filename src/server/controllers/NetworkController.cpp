@@ -17,7 +17,7 @@ bool NetworkController::enqueue(const shared::Action& action) {
     return sanitized && pending_.push_back(*sanitized);
 }
 
-shared::Intent NetworkController::decide(const shared::ControlContext& ctx) {
+shared::Intent NetworkController::decide(const shared::WorldView& ctx) {
     silence_ += ctx.dt;
 
     shared::Intent intent;

@@ -51,9 +51,9 @@ void ClientApp::onTick(uint64_t /*tick*/) {
             const auto& [seq, intent] = *sample;
             context_.send(peer_, shared::ControlsMessage{.seq = seq, .controls = intent.controls});
             for (const shared::Action& action : intent.actions) {
-                shared::visitAction(action, [this](const auto& a) {
+                std::visit([this](const auto& a) {
                     context_.send(peer_, shared::ActionMessage<std::remove_cvref_t<decltype(a)>>{a});
-                });
+                }, action);
             }
         }
     }
