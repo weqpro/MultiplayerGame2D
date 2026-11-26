@@ -3,6 +3,7 @@
 
 #include "shared/types/WorldView.h"
 #include <raylib.h>
+#include "shared/types/Ids.h"
 
 namespace server {
 
@@ -23,6 +24,15 @@ struct AABB {
             (max.y + min.y)/2,  
         };
     }
+
+    bool overlaps(const AABB& o) const {
+    return min.x < o.max.x && max.x > o.min.x &&
+            min.y < o.max.y && max.y > o.min.y;
+    }
+
+    static AABB fromCenter(Vector2 c, Vector2 halves) {
+        return {{c.x - halves.x, c.y - halves.y}, {c.x + halves.x, c.y + halves.y}};
+    }
 };
 
 struct MoveResult {
@@ -32,10 +42,19 @@ struct MoveResult {
     Vector2 normal;
 };
 
+
 struct Hit {
+    enum class Kind : uint8_t {
+        Tile,
+        Entity,
+        Count
+    };
     bool hit = false;
     float time = 1;
     Vector2 normal;
+    Kind kind;
+    shared::EntityId entity;
+
 };
 
 class CollisionQuery {

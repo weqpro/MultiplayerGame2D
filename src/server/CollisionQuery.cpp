@@ -3,6 +3,7 @@
 #include <cmath>
 #include "shared/Renderer.h"
 #include "shared/types/WorldView.h"
+#include "shared/entities/Agent.h"
 
 namespace server {
 
@@ -66,19 +67,42 @@ Hit CollisionQuery::sweepTwo(const AABB& box, Vector2 delta, const AABB& other) 
 Hit CollisionQuery::sweepRegion(const AABB& box, Vector2 delta, shared::WorldView& ctx) const {
     Hit best;
     const AABB r = sweptBounds(box, delta);
-    const int x0 = int(std::floor(r.min.x / shared::Renderer::TILE));
-    const int x1 = int(std::floor(r.max.x / shared::Renderer::TILE));
-    const int y0 = int(std::floor(r.min.y / shared::Renderer::TILE));
-    const int y1 = int(std::floor(r.max.y / shared::Renderer::TILE));
+    const float tileSize = static_cast<float>(shared::Renderer::TILE);
+
+    auto consider = [&](const Hit& h) {
+        if (h.hit && h.time < best.time) best = h;
+    };
+
+    const int x0 = int(std::floor(r.min.x / tileSize));
+    const int x1 = int(std::floor(r.max.x / tileSize));
+    const int y0 = int(std::floor(r.min.y / tileSize));
+    const int y1 = int(std::floor(r.max.y / tileSize));
 
     for (int y = y0; y <= y1; ++y)
         for (int x = x0; x <= x1; ++x) {
             if (!ctx.map.isSolid(x, y)) continue;
-            float floatTile = static_cast<float>(shared::Renderer::TILE);
-            AABB tile{{x * floatTile, y * floatTile}, {(x + 1) * floatTile, (y + 1) * floatTile}};
+            AABB tile{{x * tileSize, y * tileSize}, {(x + 1) * tileSize, (y + 1) * tileSize}};
             Hit h = sweepTwo(box, delta, tile);
-            if (h.hit && h.time < best.time) best = h;
+            h.kind = Hit::Kind::Tile;
+            consider(h);
         }
+
+    for (const shared::Agent& other : ctx.world.all<shared::Agent>()) {
+        if (other.id() == ctx.self.id()) continue;
+
+        const AABB otherBox = {
+            {other.body().pos.x - other.appearance().size.x / 2, other.body().pos.y - other.appearance().size.y / 2},
+            {other.body().pos.x + other.appearance().size.x / 2, other.body().pos.y + other.appearance().size.y / 2}
+        };
+        if (!r.overlaps(otherBox)) continue;
+
+
+        Hit h = sweepTwo(box, delta, otherBox);
+        h.kind   = Hit::Kind::Entity;
+        h.entity = other.id();
+        consider(h);
+    }
+
     return best;
 }
 

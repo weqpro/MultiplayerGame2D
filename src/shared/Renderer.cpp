@@ -107,7 +107,7 @@ void Renderer::drawEntity(const Entity& entity, bool local) const {
         const float top = pos.y - look.size.y / 2 - LABEL_GAP - barOffset
                           - static_cast<float>(LABEL_FONT_SIZE);
         DrawText(label.c_str(), static_cast<int>(pos.x) - width / 2,
-                 static_cast<int>(top), LABEL_FONT_SIZE, DARKGRAY);
+                 static_cast<int>(top), LABEL_FONT_SIZE,RAYWHITE);
     }
 }
 
