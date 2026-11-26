@@ -1,6 +1,5 @@
 #include "shared/Renderer.h"
 #include "shared/WorldMap.h"
-#include "client/World.h"
 
 #include <chrono>
 #include <string>
@@ -43,7 +42,7 @@ size_t clampIdx(float v) {
 } // namespace
 
 void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camera2D cam,
-                      EntityId localPawn, std::span<const client::ActiveAttack> attacks, int pingMs) const {
+                      EntityId localPawn, std::span<const ActiveAttack> attacks, int pingMs) const {
     BeginDrawing();
     ClearBackground(RAYWHITE);
     if (!IsTextureValid(atlas_)) {
@@ -132,7 +131,7 @@ void Renderer::drawHealthBar(Vector2 entityPos, Vector2 entitySize, float health
     DrawRectangleLinesEx(bg, 0.5f, {0, 0, 0, 150});
 }
 
-void Renderer::drawAttackArc(const client::ActiveAttack& attack) const {
+void Renderer::drawAttackArc(const ActiveAttack& attack) const {
     const float angleDeg = atan2f(attack.dir.y, attack.dir.x) * (180.0f / PI);
     const float startAngle = angleDeg - ATTACK_ARC_HALF_ANGLE;
     const float endAngle = angleDeg + ATTACK_ARC_HALF_ANGLE;

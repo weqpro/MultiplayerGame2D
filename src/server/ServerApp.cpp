@@ -167,16 +167,24 @@ void ServerApp::onTick(uint64_t tick) {
         stop();
     }
     world_.update(tickSeconds());
+
+    for (const auto& info : world_.pendingAttacks()) {
+        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f});
+    }
+
     replicator_.flush(world_, tick);
+
+    for (auto& a : activeAttacks_) a.timeLeft -= tickSeconds();
+    std::erase_if(activeAttacks_, [](const shared::ActiveAttack& a) { return a.timeLeft <= 0.0f; });
 
     auto& [cam, camCtrl] = world_.camera();
     auto me = world_.entities().find<shared::Player>(hostPawn_);
     if (!me) {
-        renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_);
+        renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_, activeAttacks_);
         return;
     }
     camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
-    renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_);
+    renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_, activeAttacks_);
 }
 
 } // namespace server

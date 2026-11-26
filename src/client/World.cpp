@@ -63,7 +63,7 @@ void World::apply(const shared::AttackEventMessage& message) {
 
 void World::tickVisuals(float dt) {
     for (auto& a : activeAttacks_) a.timeLeft -= dt;
-    std::erase_if(activeAttacks_, [](const ActiveAttack& a) { return a.timeLeft <= 0.0f; });
+    std::erase_if(activeAttacks_, [](const shared::ActiveAttack& a) { return a.timeLeft <= 0.0f; });
 }
 
 std::optional<std::pair<shared::InputSeq, shared::Intent>> World::sampleIntent(float dt) {

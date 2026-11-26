@@ -12,17 +12,11 @@
 #include "shared/controllers/CameraController.h"
 #include "shared/controllers/KeyboardController.h"
 #include "shared/entities/EntityRegistry.h"
+#include "shared/types/ActiveAttack.h"
 #include "shared/types/Ids.h"
 #include "shared/types/Intent.h"
 
 namespace client {
-
-struct ActiveAttack {
-    shared::EntityId attacker;
-    Vector2 origin;
-    Vector2 dir;
-    float timeLeft;
-};
 
 class World {
 public:
@@ -42,7 +36,7 @@ public:
     [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
     [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
     [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
-    [[nodiscard]] const std::vector<ActiveAttack>& activeAttacks() const noexcept { return activeAttacks_; }
+    [[nodiscard]] const std::vector<shared::ActiveAttack>& activeAttacks() const noexcept { return activeAttacks_; }
 
 private:
     shared::EntityRegistry registry_;
@@ -53,7 +47,7 @@ private:
     shared::WorldMap worldMap_{};
     shared::MapView mapView_{worldMap_};
     CameraWrapper cam_;
-    std::vector<ActiveAttack> activeAttacks_;
+    std::vector<shared::ActiveAttack> activeAttacks_;
 
 };
 

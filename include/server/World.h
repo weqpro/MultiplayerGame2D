@@ -59,6 +59,7 @@ public:
     void update(float dt);
 
     [[nodiscard]] Events drainEvents();
+    [[nodiscard]] const std::vector<shared::AttackEventInfo>& pendingAttacks() const noexcept { return events_.attacks; }
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
     [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }

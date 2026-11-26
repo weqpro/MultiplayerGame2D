@@ -11,6 +11,7 @@
 #include "shared/Protocol.h"
 #include "shared/Renderer.h"
 #include "shared/types/Action.h"
+#include "shared/types/ActiveAttack.h"
 #include "shared/types/Ids.h"
 #include "server/Replicator.h"
 #include "server/controllers/NetworkController.h"
@@ -65,6 +66,7 @@ private:
 
     std::unordered_map<ENetPeer*, shared::EntityId> sessions_;
     shared::EntityId hostPawn_{shared::NULL_ENTITY};
+    std::vector<shared::ActiveAttack> activeAttacks_;
 };
 
 } // namespace server
