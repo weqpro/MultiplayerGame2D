@@ -43,7 +43,7 @@ size_t clampIdx(float v) {
 } // namespace
 
 void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camera2D cam,
-                      EntityId localPawn, std::span<const client::ActiveAttack> attacks) const {
+                      EntityId localPawn, std::span<const client::ActiveAttack> attacks, int pingMs) const {
     BeginDrawing();
     ClearBackground(RAYWHITE);
     if (!IsTextureValid(atlas_)) {
@@ -68,6 +68,12 @@ void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camer
     }
 
     EndMode2D();
+
+    DrawFPS(10, 10);
+    if (pingMs >= 0) {
+        DrawText(TextFormat("Ping: %d ms", pingMs), 10, 34, 20, DARKGRAY);
+    }
+
     EndDrawing();
 }
 

@@ -17,7 +17,8 @@ public:
     static constexpr size_t TILE = 16;
     void render(const EntityRegistry& entities, const WorldMap& map, Camera2D camera,
                 EntityId localPawn = NULL_ENTITY,
-                std::span<const client::ActiveAttack> attacks = {}) const;
+                std::span<const client::ActiveAttack> attacks = {},
+                int pingMs = -1) const;
     void renderMap(const WorldMap& map, const Rectangle& view) const;
     void loadAtlas(const std::filesystem::path& texturePath = "assets/textures.png");
 private:

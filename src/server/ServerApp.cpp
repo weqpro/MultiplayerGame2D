@@ -27,7 +27,7 @@ constexpr Color PLAYER_COLORS[] = {
     DARKGRAY, MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, DARKBROWN
 };
 
-constexpr int NPC_COUNT = 3;
+constexpr int NPC_COUNT = 67;
 
 constexpr float NPC_LEASH = 120.0f;
 
