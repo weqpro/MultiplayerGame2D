@@ -12,7 +12,7 @@
 namespace shared {
 namespace {
 
-constexpr float MELEE_ARC_COS = 0.5f;
+constexpr float MELEE_ARC_COS = 0.866f;
 
 } // namespace
 

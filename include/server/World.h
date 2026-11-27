@@ -9,11 +9,14 @@
 #include <vector>
 
 #include "server/CollisionQuery.h"
+#include "server/FlowFieldManager.h"
+#include "server/OccupancyMap.h"
 #include "shared/WorldMap.h"
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
 #include "shared/Protocol.h"
+#include "shared/types/ActiveAttack.h"
 #include "shared/types/Ids.h"
 #include "shared/controllers/CameraController.h"
 
@@ -60,9 +63,14 @@ public:
 
     [[nodiscard]] Events drainEvents();
     [[nodiscard]] const std::vector<shared::AttackEventInfo>& pendingAttacks() const noexcept { return events_.attacks; }
+    [[nodiscard]] std::vector<shared::ActiveAttack> pendingActiveAttacks() const;
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
     [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
+#ifdef ENABLE_DEBUG_DRAW
+    [[nodiscard]] const FlowFieldManager& flowFields() const noexcept { return flowFields_; }
+    [[nodiscard]] const OccupancyMap& occupancy() const noexcept { return occupancy_; }
+#endif
     [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
     [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
     void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
@@ -86,6 +94,8 @@ private:
     shared::MapView mapView_{worldMap_};
     CameraWrapper cam_;
     CollisionQuery colQuery_;
+    OccupancyMap occupancy_;
+    FlowFieldManager flowFields_;
 };
 
 }

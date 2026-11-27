@@ -12,6 +12,7 @@ struct ActiveAttack {
     Vector2 origin;
     Vector2 dir;
     float timeLeft;
+    float radius{10.0f};
 };
 
 }

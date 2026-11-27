@@ -23,7 +23,7 @@ public:
 private:
     void drawEntity(const Entity& entity, bool local) const;
     void drawHealthBar(Vector2 entityPos, Vector2 entitySize, float health) const;
-    void drawAttackArc(const ActiveAttack& attack) const;
+    void drawAttackArc(const ActiveAttack& attack, const EntityRegistry& entities) const;
     Texture2D atlas_;
     Rectangle source(int index) const;
     static inline Rectangle CameraWorldRect(const Camera2D& cam) {

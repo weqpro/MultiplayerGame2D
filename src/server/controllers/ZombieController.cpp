@@ -8,6 +8,7 @@
 #include <raymath.h>
 
 #include "server/controllers/WanderController.h"
+#include "server/FlowFieldManager.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/Entity.h"
 #include "shared/entities/EntityRegistry.h"
@@ -29,7 +30,14 @@ shared::Intent ZombieController::decide(const shared::WorldView& ctx) {
         target = ctx.world.find(*targetId_);
     }
 
-    const Vector2 dir = Vector2Normalize(Vector2Subtract(target->body().pos, selfPos));
+    Vector2 dir = {0, 0};
+    if (ctx.flowFields) {
+        dir = ctx.flowFields->getDirection(*targetId_, selfPos);
+    }
+    if (dir.x == 0.0f && dir.y == 0.0f) {
+        dir = Vector2Normalize(Vector2Subtract(target->body().pos, selfPos));
+    }
+
     shared::Intent intent{.controls = {.move = dir}};
     if (ctx.self.canAttack() && ctx.self.inReach(*target)) {
         intent.actions.push_back(shared::MeleeAction{.dir = dir});

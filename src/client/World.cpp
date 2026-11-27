@@ -57,7 +57,11 @@ void World::apply(const shared::SnapshotMessage& message) {
 
 void World::apply(const shared::AttackEventMessage& message) {
     for (const auto& info : message.attacks) {
-        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f});
+        float radius = 10.0f;
+        if (const auto* agent = registry_.find<shared::Agent>(info.attacker)) {
+            radius = agent->combat().reach + agent->appearance().size.x / 2.0f;
+        }
+        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f, radius});
     }
 }
 

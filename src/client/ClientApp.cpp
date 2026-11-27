@@ -78,12 +78,16 @@ void ClientApp::onTick(uint64_t /*tick*/) {
     const int pingMs = (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED)
                        ? static_cast<int>(peer_->roundTripTime) : -1;
     auto me = world_.entities().find<shared::Player>(world_.pawn());
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
     if (!me) {
         renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks(), pingMs);
+        EndDrawing();
         return;
     }
     camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
     renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks(), pingMs);
+    EndDrawing();
 }
 
 void ClientApp::onShutDown() {

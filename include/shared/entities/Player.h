@@ -14,7 +14,7 @@ class Player final : public Agent {
 public:
     static constexpr EntityKind KIND = EntityKind::PLAYER;
     static constexpr Locomotion LOCOMOTION{.speed = 67.0f};
-    static constexpr Combat COMBAT{.damage = 25_hp, .reach = 6.0f, .cooldown = 0.4f};
+    static constexpr Combat COMBAT{.damage = 25_hp, .reach = 20.0f, .cooldown = 0.4f};
 
     Player(EntityId id, const Body& body, const Appearance& look,
            std::convertible_to<std::string> auto&& username)

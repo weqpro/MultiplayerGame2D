@@ -67,6 +67,9 @@ private:
     std::unordered_map<ENetPeer*, shared::EntityId> sessions_;
     shared::EntityId hostPawn_{shared::NULL_ENTITY};
     std::vector<shared::ActiveAttack> activeAttacks_;
+#ifdef ENABLE_DEBUG_DRAW
+    bool showFlowField_ = false;
+#endif
 };
 
 } // namespace server

@@ -12,6 +12,7 @@
 #include "server/controllers/ZombieController.h"
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
+#include "shared/Renderer.h"
 #include "shared/controllers/KeyboardController.h"
 #include "shared/entities/NPC.h"
 #include "shared/entities/Player.h"
@@ -168,9 +169,8 @@ void ServerApp::onTick(uint64_t tick) {
     }
     world_.update(tickSeconds());
 
-    for (const auto& info : world_.pendingAttacks()) {
-        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f});
-    }
+    auto attacks = world_.pendingActiveAttacks();
+    activeAttacks_.insert(activeAttacks_.end(), attacks.begin(), attacks.end());
 
     replicator_.flush(world_, tick);
 
@@ -179,12 +179,120 @@ void ServerApp::onTick(uint64_t tick) {
 
     auto& [cam, camCtrl] = world_.camera();
     auto me = world_.entities().find<shared::Player>(hostPawn_);
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
     if (!me) {
         renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_, activeAttacks_);
+        EndDrawing();
         return;
     }
     camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
     renderer_.render(world_.entities(), world_.worldMap(), cam, hostPawn_, activeAttacks_);
+#ifdef ENABLE_DEBUG_DRAW
+    if (IsKeyPressed(KEY_Y)) showFlowField_ = !showFlowField_;
+    if (showFlowField_) {
+        BeginMode2D(cam);
+        if (me) DrawCircleLinesV(me->body().pos, 120.0f, WHITE);
+        constexpr int T = shared::Renderer::TILE;
+        {
+            Vector2 tl = GetScreenToWorld2D({0, 0}, cam);
+            Vector2 br = GetScreenToWorld2D({float(GetScreenWidth()), float(GetScreenHeight())}, cam);
+            int ox0 = std::max(0, int(tl.x) / T);
+            int oy0 = std::max(0, int(tl.y) / T);
+            int ox1 = std::min(int(world_.worldMap().width()) - 1, int(br.x) / T);
+            int oy1 = std::min(int(world_.worldMap().height()) - 1, int(br.y) / T);
+            const auto& occ = world_.occupancy();
+            for (int y = oy0; y <= oy1; ++y) {
+                for (int x = ox0; x <= ox1; ++x) {
+                    uint8_t n = occ.count(x, y);
+                    if (n == 0) continue;
+                    unsigned char alpha = static_cast<unsigned char>(std::min(180, int(n) * 45));
+                    DrawRectangle(x * T, y * T, T, T, {230, 41, 55, alpha});
+                }
+            }
+        }
+        const auto* field = world_.flowFields().fieldFor(hostPawn_);
+        if (field) {
+            constexpr int STEP = T / 2;
+            constexpr float Tf = float(T);
+            Vector2 tl = GetScreenToWorld2D({0, 0}, cam);
+            Vector2 br = GetScreenToWorld2D({float(GetScreenWidth()), float(GetScreenHeight())}, cam);
+            int px0 = std::max(0, int(tl.x) / STEP * STEP);
+            int py0 = std::max(0, int(tl.y) / STEP * STEP);
+            int px1 = std::min(int(world_.worldMap().width()) * T, int(br.x) + STEP);
+            int py1 = std::min(int(world_.worldMap().height()) * T, int(br.y) + STEP);
+
+            float maxCost = 0.0f;
+            int tx0 = std::max(0, px0 / T);
+            int ty0 = std::max(0, py0 / T);
+            int tx1 = std::min(int(world_.worldMap().width()) - 1, px1 / T);
+            int ty1 = std::min(int(world_.worldMap().height()) - 1, py1 / T);
+            for (int ty = ty0; ty <= ty1; ++ty)
+                for (int tx = tx0; tx <= tx1; ++tx) {
+                    float c = field->cost(tx, ty);
+                    if (c < 1e30f && c > maxCost) maxCost = c;
+                }
+            if (maxCost < 1.0f) maxCost = 1.0f;
+
+            for (int py = py0; py < py1; py += STEP) {
+                for (int px = px0; px < px1; px += STEP) {
+                    float spx = float(px) + STEP / 2.0f;
+                    float spy = float(py) + STEP / 2.0f;
+
+                    float sx = spx / Tf - 0.5f;
+                    float sy = spy / Tf - 0.5f;
+                    int ix = int(std::floor(sx));
+                    int iy = int(std::floor(sy));
+                    float fx = sx - float(ix);
+                    float fy = sy - float(iy);
+
+                    Vector2 d00 = field->direction(ix, iy);
+                    Vector2 d10 = field->direction(ix + 1, iy);
+                    Vector2 d01 = field->direction(ix, iy + 1);
+                    Vector2 d11 = field->direction(ix + 1, iy + 1);
+
+                    Vector2 dir = {
+                        d00.x * (1-fx)*(1-fy) + d10.x * fx*(1-fy) + d01.x * (1-fx)*fy + d11.x * fx*fy,
+                        d00.y * (1-fx)*(1-fy) + d10.y * fx*(1-fy) + d01.y * (1-fx)*fy + d11.y * fx*fy,
+                    };
+                    float dlen = std::sqrt(dir.x*dir.x + dir.y*dir.y);
+                    if (dlen < 1e-6f) continue;
+                    dir.x /= dlen;
+                    dir.y /= dlen;
+
+                    float t = std::clamp(field->cost(px / T, py / T) / maxCost, 0.0f, 1.0f);
+                    unsigned char cr, cg, cb;
+                    if (t < 0.5f) {
+                        float s = t * 2.0f;
+                        cr = (unsigned char)(s * 255);
+                        cg = (unsigned char)(200 + s * (165 - 200));
+                        cb = 0;
+                    } else {
+                        float s = (t - 0.5f) * 2.0f;
+                        cr = (unsigned char)(255 + s * (230 - 255));
+                        cg = (unsigned char)(165 + s * (41 - 165));
+                        cb = (unsigned char)(s * 55);
+                    }
+                    Color color = {cr, cg, cb, 180};
+
+                    float len = STEP * 0.35f;
+                    float ex = spx + dir.x * len;
+                    float ey = spy + dir.y * len;
+                    DrawLineEx({spx, spy}, {ex, ey}, 1.0f, color);
+
+                    float nx = -dir.y, ny = dir.x;
+                    float wl = STEP * 0.15f;
+                    float bx = ex - dir.x * wl;
+                    float by = ey - dir.y * wl;
+                    DrawLineEx({ex, ey}, {bx + nx * wl, by + ny * wl}, 1.0f, color);
+                    DrawLineEx({ex, ey}, {bx - nx * wl, by - ny * wl}, 1.0f, color);
+                }
+            }
+        }
+        EndMode2D();
+    }
+#endif
+    EndDrawing();
 }
 
 } // namespace server

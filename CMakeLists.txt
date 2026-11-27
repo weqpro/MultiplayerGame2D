@@ -85,6 +85,8 @@ add_executable(MultiplayerGame2D_Server
   src/server/controllers/NetworkController.cpp
   src/server/controllers/WanderController.cpp
   src/server/controllers/ZombieController.cpp
+  src/server/FlowField.cpp
+  src/server/FlowFieldManager.cpp
   src/server/Replicator.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp
@@ -93,6 +95,11 @@ add_executable(MultiplayerGame2D_Server
 )
 
 target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)
+
+option(ENABLE_DEBUG_DRAW "Compile debug drawing overlays (flow field arrows, etc.)" OFF)
+if(ENABLE_DEBUG_DRAW)
+    target_compile_definitions(MultiplayerGame2D_Server PRIVATE ENABLE_DEBUG_DRAW)
+endif()
 
 add_custom_command(TARGET MultiplayerGame2D_Server POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory

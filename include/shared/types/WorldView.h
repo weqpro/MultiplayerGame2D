@@ -4,6 +4,8 @@
 
 #include <vector>
 
+namespace server { class FlowFieldManager; }
+
 namespace shared {
 
 class Agent;
@@ -17,6 +19,7 @@ struct WorldView {
     const Camera2D& cam;
     float dt;
     std::vector<AttackEventInfo>* attackEvents = nullptr;
+    const server::FlowFieldManager* flowFields = nullptr;
 };
 
 }

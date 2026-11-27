@@ -43,11 +43,8 @@ size_t clampIdx(float v) {
 
 void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camera2D cam,
                       EntityId localPawn, std::span<const ActiveAttack> attacks, int pingMs) const {
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
     if (!IsTextureValid(atlas_)) {
         DrawText("Failed to load textures! Try buying a new PC", 20, 20, 20, RED);
-        EndDrawing();
         return;
     }
 
@@ -63,7 +60,7 @@ void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camer
     }
 
     for (const auto& attack : attacks) {
-        drawAttackArc(attack);
+        drawAttackArc(attack, entities);
     }
 
     EndMode2D();
@@ -72,8 +69,6 @@ void Renderer::render(const EntityRegistry& entities, const WorldMap& map, Camer
     if (pingMs >= 0) {
         DrawText(TextFormat("Ping: %d ms", pingMs), 10, 34, 20, DARKGRAY);
     }
-
-    EndDrawing();
 }
 
 void Renderer::drawEntity(const Entity& entity, bool local) const {
@@ -131,14 +126,18 @@ void Renderer::drawHealthBar(Vector2 entityPos, Vector2 entitySize, float health
     DrawRectangleLinesEx(bg, 0.5f, {0, 0, 0, 150});
 }
 
-void Renderer::drawAttackArc(const ActiveAttack& attack) const {
+void Renderer::drawAttackArc(const ActiveAttack& attack, const EntityRegistry& entities) const {
+    Vector2 pos = attack.origin;
+    if (const auto* entity = entities.find(attack.attacker)) {
+        pos = entity->body().pos;
+    }
     const float angleDeg = atan2f(attack.dir.y, attack.dir.x) * (180.0f / PI);
     const float startAngle = angleDeg - ATTACK_ARC_HALF_ANGLE;
     const float endAngle = angleDeg + ATTACK_ARC_HALF_ANGLE;
     const float alpha = std::clamp(attack.timeLeft / ATTACK_ARC_DURATION, 0.0f, 1.0f);
-    const float radius = 10.0f;
+    const float radius = attack.radius;
     const Color color = {255, 255, 255, static_cast<unsigned char>(180.0f * alpha)};
-    DrawCircleSector(attack.origin, radius, startAngle, endAngle, 12, color);
+    DrawCircleSector(pos, radius, startAngle, endAngle, 12, color);
 }
 
 void Renderer::renderMap(const WorldMap& map, const Rectangle& view) const {
