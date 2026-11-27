@@ -56,15 +56,15 @@ public:
     bool send(ENetPeer* peer, std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
     void broadcast(std::span<const std::byte> payload, uint8_t channelID = 0, enet_uint32 flags = ENET_PACKET_FLAG_RELIABLE);
 
-    template <Message M>
-    bool send(ENetPeer* peer, const M& message) {
-        const auto bytes = Packet<M>{message}.serialize();
+    template <typename List, Message M>
+    bool sendMessage(ENetPeer* peer, const M& message) {
+        const auto bytes = encodeMessage<List>(message);
         return bytes && send(peer, *bytes, M::CHANNEL.id, M::CHANNEL.flags);
     }
 
-    template <Message M>
-    bool broadcast(const M& message) {
-        const auto bytes = Packet<M>{message}.serialize();
+    template <typename List, Message M>
+    bool broadcastMessage(const M& message) {
+        const auto bytes = encodeMessage<List>(message);
         if (!bytes) {
             return false;
         }

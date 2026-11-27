@@ -50,6 +50,9 @@ void Replicator::replicateEvents(World& world) {
     if (!despawns.ids.empty()) {
         net_.broadcast(despawns);
     }
+    if (!events.attacks.empty()) {
+        net_.broadcast(shared::AttackEventMessage{.attacks = std::move(events.attacks)});
+    }
 }
 
 void Replicator::bootstrapJoiners(const World& world) {
@@ -62,10 +65,16 @@ void Replicator::bootstrapJoiners(const World& world) {
     for (const shared::Entity& entity : world.entities().all()) {
         msg.entities.push_back(entity.describe());
     }
+    shared::MapMessage mapMsg {};
+    auto& map = world.worldMap();
+    mapMsg.map.height = map.height();
+    mapMsg.map.width = map.width();
+    mapMsg.map.layer.assign(map.layer().begin(), map.layer().end());
 
     for (const Joiner& joiner : joiners_) {
         net_.send(joiner.peer, shared::PossessMessage{.pawn = joiner.pawn});
         net_.send(joiner.peer, msg);
+        net_.send(joiner.peer, mapMsg);
     }
     joiners_.clear();
 }

@@ -5,10 +5,13 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "shared/Messages.h"
 #include "shared/Protocol.h"
+#include "shared/entities/Player.h"
+#include "shared/types/Ids.h"
 
 namespace client {
 namespace {
@@ -38,6 +41,8 @@ bool ClientApp::onStartUp() {
         return false;
     }
 
+    renderer_.loadAtlas();
+
     return true;
 }
 
@@ -46,11 +51,43 @@ void ClientApp::onTick(uint64_t /*tick*/) {
         stop();
     }
     if (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED) {
-        if (const auto intent = world_.sampleIntent(tickSeconds())) {
-            context_.send(peer_, *intent);
+        if (const auto sample = world_.sampleIntent(tickSeconds())) {
+            const auto& [seq, intent] = *sample;
+            context_.send(peer_, shared::ControlsMessage{.seq = seq, .controls = intent.controls});
+            for (const shared::Action& action : intent.actions) {
+                std::visit([this](const auto& a) {
+                    context_.send(peer_, shared::ActionMessage<std::remove_cvref_t<decltype(a)>>{a});
+                }, action);
+            }
         }
     }
-    renderer_.render(world_.entities(), world_.pawn());
+    if (!mapReady_) {
+        return;
+    }
+    auto& [cam, camCtrl] = world_.camera();
+    if (world_.pawn() == shared::NULL_ENTITY) {
+        return;
+    }
+    world_.tickVisuals(tickSeconds());
+    if (!boundReady_) {
+        auto& map = world_.worldMap();
+        constexpr float TILE = 16.0f;
+        camCtrl.bounds = {0, 0, static_cast<float>(map.width()) * TILE, static_cast<float>(map.height()) * TILE};
+        boundReady_ = true;
+    }
+    const int pingMs = (peer_ && peer_->state == ENET_PEER_STATE_CONNECTED)
+                       ? static_cast<int>(peer_->roundTripTime) : -1;
+    auto me = world_.entities().find<shared::Player>(world_.pawn());
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+    if (!me) {
+        renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks(), pingMs);
+        EndDrawing();
+        return;
+    }
+    camCtrl.update(cam, tickSeconds(), me->body().pos, me->body().pos - me->prevPos());
+    renderer_.render(world_.entities(), world_.worldMap(), cam, world_.pawn(), world_.activeAttacks(), pingMs);
+    EndDrawing();
 }
 
 void ClientApp::onShutDown() {
@@ -72,40 +109,17 @@ void ClientApp::onConnect(ENetPeer* /*peer*/) {
     std::cout << "Connected to server.\n";
 }
 
-template <shared::Message M>
-void ClientApp::dispatch(std::span<const std::byte> data) {
-    const auto packet = shared::Packet<M>::deserialize(data);
-    if (!packet) {
-        //TODO: handle
-        std::cout << "Deserialize failed for message type " << static_cast<int>(M::TYPE) << std::endl;
-        return;
-    }
-    world_.apply(packet->message);
-}
-
 void ClientApp::onReceive(ENetPeer* /*peer*/, ENetPacket* packet, uint8_t /*channelID*/) {
     const std::span<const std::byte> data(reinterpret_cast<const std::byte*>(packet->data), packet->dataLength);
-    const auto type = shared::peek_type(data);
-    if (!type) {
+    const auto result = shared::dispatch<shared::ServerMessages>(data, [this](const auto& message) {
+        world_.apply(message);
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(message)>, shared::MapMessage>) {
+            mapReady_ = true;
+        }
+    });
+    if (result != shared::DispatchResult::OK) {
         //TODO: handle
-        std::cout << "Invalid type" << std::endl;
-        return;
-    }
-    switch (*type) {
-        case shared::MessageType::POSSESS:
-            dispatch<shared::PossessMessage>(data);
-            break;
-        case shared::MessageType::SPAWN:
-            dispatch<shared::SpawnMessage>(data);
-            break;
-        case shared::MessageType::DESPAWN:
-            dispatch<shared::DespawnMessage>(data);
-            break;
-        case shared::MessageType::SNAPSHOT:
-            dispatch<shared::SnapshotMessage>(data);
-            break;
-        default:
-            break;
+        std::cout << "Bad packet (" << static_cast<int>(result) << ")" << std::endl;
     }
 }
 

@@ -3,8 +3,11 @@
 #include <iostream>
 #include <utility>
 
+#include "shared/Protocol.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityFactory.h"
+#include "shared/WorldMap.h"
+#include "shared/entities/Player.h"
 
 namespace client {
 
@@ -22,11 +25,21 @@ void World::apply(const shared::SpawnMessage& message) {
         }
         registry_.insert(std::move(entity));
     }
+
 }
 
 void World::apply(const shared::DespawnMessage& message) {
     for (const shared::EntityId id : message.ids) {
         registry_.erase(id);
+    }
+}
+
+void World::apply(const shared::MapMessage& message) {
+    auto mapRes = shared::WorldMap::fromNetwork(message);
+    if (mapRes) {
+        worldMap_ = std::move(*mapRes);
+    } else {
+        std::cerr << "Something is wrong with mapMessage" << std::endl;
     }
 }
 
@@ -36,21 +49,37 @@ void World::apply(const shared::SnapshotMessage& message) {
     }
     lastTick_ = message.tick;
     for (const shared::EntityState& state : message.entities) {
-        if (shared::Entity* entity = registry_.find(state.id)) {
+        if (auto* player = registry_.find<shared::Player>(state.id)) {
+            player->savePrevPos();
+            player->setBody(state.body);
+        } else if (auto* entity = registry_.find(state.id)) {
             entity->setBody(state.body);
         }
     }
 }
 
-std::optional<shared::IntentMessage> World::sampleIntent(float dt) {
-    const auto* pawn = registry_.find<shared::Agent>(pawn_);
+void World::apply(const shared::AttackEventMessage& message) {
+    for (const auto& info : message.attacks) {
+        float radius = 10.0f;
+        if (const auto* agent = registry_.find<shared::Agent>(info.attacker)) {
+            radius = agent->combat().reach + agent->appearance().size.x / 2.0f;
+        }
+        activeAttacks_.push_back({info.attacker, info.origin, info.dir, 0.15f, radius});
+    }
+}
+
+void World::tickVisuals(float dt) {
+    for (auto& a : activeAttacks_) a.timeLeft -= dt;
+    std::erase_if(activeAttacks_, [](const shared::ActiveAttack& a) { return a.timeLeft <= 0.0f; });
+}
+
+std::optional<std::pair<shared::InputSeq, shared::Intent>> World::sampleIntent(float dt) {
+    auto* pawn = registry_.find<shared::Agent>(pawn_);
     if (!pawn) {
         return std::nullopt;
     }
-    return shared::IntentMessage{
-        .seq = nextSeq_++,
-        .intent = input_.decide({*pawn, registry_, dt}),
-    };
+    shared::WorldView ctx{*pawn, registry_, mapView_, cam_.camera, dt};
+    return std::pair{nextSeq_++, input_.decide(ctx)};
 }
 
 }

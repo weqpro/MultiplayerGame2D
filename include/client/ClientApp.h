@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <span>
 #include <string>
 
 #include <enet/enet.h>
@@ -11,7 +10,6 @@
 #include "client/World.h"
 #include "shared/AppBase.h"
 #include "client/WebClientContext.h"
-#include "shared/Messages.h"
 #include "shared/Renderer.h"
 
 namespace client {
@@ -39,15 +37,14 @@ private:
 
     void onShutDown();
 
-    template <shared::Message M>
-    void dispatch(std::span<const std::byte> data);
-
     std::string hostName_;
     uint16_t port_;
     ENetPeer* peer_{nullptr};
 
     World world_;
     shared::Renderer renderer_;
+    bool mapReady_ = false;
+    bool boundReady_ = false;
 };
 
 } // namespace client

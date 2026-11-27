@@ -2,10 +2,12 @@
 #define SHARED_PROTOCOL_H
 
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "shared/Messages.h"
 #include "shared/WebContext.h"
+#include "shared/types/Action.h"
 #include "shared/types/Body.h"
 #include "shared/types/ExternalFields.h"
 #include "shared/types/Ids.h"
@@ -15,18 +17,25 @@
 
 namespace shared {
 
-struct IntentMessage {
-    static constexpr MessageType TYPE = MessageType::INTENT;
+struct ControlsMessage {
     static constexpr network::Channel CHANNEL = network::UNRELIABLE;
 
     InputSeq seq{};
-    Intent intent{};
+    Controls controls{};
 
-    static constexpr auto fields(auto& self) { return std::tie(self.seq, self.intent); }
+    static constexpr auto fields(auto& self) { return std::tie(self.seq, self.controls); }
+};
+
+template <typename A>
+struct ActionMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    A action{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.action); }
 };
 
 struct PossessMessage {
-    static constexpr MessageType TYPE = MessageType::POSSESS;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     EntityId pawn{NULL_ENTITY};
@@ -35,7 +44,6 @@ struct PossessMessage {
 };
 
 struct SpawnMessage {
-    static constexpr MessageType TYPE = MessageType::SPAWN;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     std::vector<SpawnInfo> entities;
@@ -44,7 +52,6 @@ struct SpawnMessage {
 };
 
 struct DespawnMessage {
-    static constexpr MessageType TYPE = MessageType::DESPAWN;
     static constexpr network::Channel CHANNEL = network::RELIABLE;
 
     std::vector<EntityId> ids;
@@ -60,7 +67,6 @@ struct EntityState {
 };
 
 struct SnapshotMessage {
-    static constexpr MessageType TYPE = MessageType::SNAPSHOT;
     static constexpr network::Channel CHANNEL = network::UNRELIABLE;
 
     Tick tick{};
@@ -68,6 +74,51 @@ struct SnapshotMessage {
 
     static constexpr auto fields(auto& self) { return std::tie(self.tick, self.entities); }
 };
+
+struct MapInfo {
+    size_t width = 0;
+    size_t height = 0;
+    std::vector<uint16_t> layer;
+
+    static constexpr auto fields(auto& self) { return std::tie(self.width, self.height, self.layer); }
+};
+
+struct MapMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    MapInfo map {};
+    static constexpr auto fields(auto& self) { return std::tie(self.map); }
+};
+
+struct AttackEventInfo {
+    EntityId attacker{};
+    Vector2 origin{};
+    Vector2 dir{};
+
+    static constexpr auto fields(auto& self) { return std::tie(self.attacker, self.origin, self.dir); }
+};
+
+struct AttackEventMessage {
+    static constexpr network::Channel CHANNEL = network::RELIABLE;
+
+    std::vector<AttackEventInfo> attacks;
+
+    static constexpr auto fields(auto& self) { return std::tie(self.attacks); }
+};
+
+template <typename V>
+struct ClientMessagesOf;
+
+template <typename... As>
+struct ClientMessagesOf<std::variant<As...>> {
+    using type = MessageList<ControlsMessage, ActionMessage<As>...>;
+};
+
+// Wire id = position in the list. Client and server are always built from the same source.
+// ControlsMessage = 0, then one ActionMessage<A> per Action alternative, in variant order.
+using ClientMessages = ClientMessagesOf<Action>::type;
+using ServerMessages = MessageList<PossessMessage, SpawnMessage, DespawnMessage, SnapshotMessage, MapMessage, AttackEventMessage>;
+
 
 }
 

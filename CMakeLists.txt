@@ -43,6 +43,7 @@ endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED COMPONENTS json)
 
 # -----------------------------------------------------------------------------
 # 1. Shared Library
@@ -53,14 +54,17 @@ add_library(GameShared STATIC
   src/shared/entities/Entity.cpp
   src/shared/entities/EntityFactory.cpp
   src/shared/entities/EntityRegistry.cpp
+  src/shared/types/Action.cpp
   src/shared/types/Intent.cpp
   src/shared/ENetWrappers.cpp
   src/shared/WebContext.cpp
   src/shared/Renderer.cpp
+  src/shared/WorldMap.cpp
+  src/server/CollisionQuery.cpp
 )
 
 target_include_directories(GameShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GameShared PUBLIC enet raylib)
+target_link_libraries(GameShared PUBLIC enet raylib Boost::json)
 
 # -----------------------------------------------------------------------------
 # 2. Client Executable
@@ -80,6 +84,9 @@ target_link_libraries(MultiplayerGame2D_Client PRIVATE GameShared raylib Threads
 add_executable(MultiplayerGame2D_Server
   src/server/controllers/NetworkController.cpp
   src/server/controllers/WanderController.cpp
+  src/server/controllers/ZombieController.cpp
+  src/server/FlowField.cpp
+  src/server/FlowFieldManager.cpp
   src/server/Replicator.cpp
   src/server/ServerApp.cpp
   src/server/WebServerContext.cpp
@@ -88,3 +95,14 @@ add_executable(MultiplayerGame2D_Server
 )
 
 target_link_libraries(MultiplayerGame2D_Server PRIVATE GameShared raylib Threads::Threads)
+
+option(ENABLE_DEBUG_DRAW "Compile debug drawing overlays (flow field arrows, etc.)" OFF)
+if(ENABLE_DEBUG_DRAW)
+    target_compile_definitions(MultiplayerGame2D_Server PRIVATE ENABLE_DEBUG_DRAW)
+endif()
+
+add_custom_command(TARGET MultiplayerGame2D_Server POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          ${CMAKE_SOURCE_DIR}/assets
+          $<TARGET_FILE_DIR:MultiplayerGame2D_Server>/assets
+)

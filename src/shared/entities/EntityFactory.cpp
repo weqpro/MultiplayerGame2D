@@ -5,7 +5,7 @@
 
 namespace shared {
 
-std::unique_ptr<Entity> makeEntity(const SpawnInfo& info) {
+std::unique_ptr<Entity> makeEntity(const SpawnInfo& info) { // TODO: add attributes
     if (info.id == NULL_ENTITY) {
         return nullptr;
     }

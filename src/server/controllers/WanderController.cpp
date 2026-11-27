@@ -1,40 +1,60 @@
 #include "server/controllers/WanderController.h"
 
 #include <cmath>
-#include <numbers>
+
+#include <raymath.h>
 
 #include "shared/entities/Agent.h"
 
 namespace server {
 namespace {
 
-constexpr float kReturnSeconds = 1.0f;
+constexpr int WAIT_PERCENT = 30;  // chance to stop before turning
 
 float randomSeconds(int minMs, int maxMs) {
     return static_cast<float>(GetRandomValue(minMs, maxMs)) / 1000.0f;
 }
 
+// Random point on the edge of the (-1, -1) -> (1, 1) square.
+Vector2 randomEdgePoint() {
+    const float along = static_cast<float>(GetRandomValue(-100, 100)) / 100.0f;
+    switch (GetRandomValue(0, 3)) {
+        case 0:  return {along, -1.0f};  // top
+        case 1:  return {1.0f, along};   // right
+        case 2:  return {along, 1.0f};   // bottom
+        default: return {-1.0f, along};  // left
+    }
+}
+
 } // namespace
 
-shared::Intent WanderController::decide(const shared::ControlContext& ctx) {
+shared::Intent WanderController::decide(const shared::WorldView& ctx) {
     const Vector2 pos = ctx.self.body().pos;
-    const Vector2 toHome{home_.x - pos.x, home_.y - pos.y};
-    const float distance = std::hypot(toHome.x, toHome.y);
+    const float dx = pos.x - home_.x;
+    const float dy = pos.y - home_.y;
+    const bool pastX = std::abs(dx) > leash_;
+    const bool pastY = std::abs(dy) > leash_;
 
     untilTurn_ -= ctx.dt;
-    if (distance > leash_) {
-        heading_ = {toHome.x / distance, toHome.y / distance};
-        untilTurn_ = kReturnSeconds;
-    } else if (untilTurn_ <= 0.0f) {
-        untilTurn_ = randomSeconds(1000, 3000);
-        if (GetRandomValue(0, 3) == 0) {
+
+    const bool moving = heading_.x != 0.0f || heading_.y != 0.0f;
+    // Past an edge and not heading back in.
+    const bool bounce = moving && ((pastX && dx * heading_.x >= 0.0f)
+                                || (pastY && dy * heading_.y >= 0.0f));
+
+    if (bounce || untilTurn_ <= 0.0f) {
+        if (moving && GetRandomValue(1, 100) <= WAIT_PERCENT) {
             heading_ = {};
+            untilTurn_ = randomSeconds(4000, 5000);
         } else {
-            const float angle = static_cast<float>(GetRandomValue(0, 359)) * std::numbers::pi_v<float> / 180.0f;
-            heading_ = {std::cos(angle), std::sin(angle)};
+            heading_ = randomEdgePoint();
+            // Point back inside on any axis that's past the leash.
+            if (pastX) heading_.x = std::copysign(heading_.x, -dx);
+            if (pastY) heading_.y = std::copysign(heading_.y, -dy);
+            untilTurn_ = randomSeconds(2000, 3000);
         }
     }
-    return {.move = heading_};
+    return {.controls = {.move = Vector2Scale(Vector2Normalize(heading_), WANDER_SPEED_)}};
 }
 
 }

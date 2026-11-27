@@ -8,10 +8,17 @@
 #include <utility>
 #include <vector>
 
+#include "server/CollisionQuery.h"
+#include "server/FlowFieldManager.h"
+#include "server/OccupancyMap.h"
+#include "shared/WorldMap.h"
 #include "shared/contracts/IController.h"
 #include "shared/entities/Agent.h"
 #include "shared/entities/EntityRegistry.h"
+#include "shared/Protocol.h"
+#include "shared/types/ActiveAttack.h"
 #include "shared/types/Ids.h"
+#include "shared/SmoothOperator.h"
 
 namespace server {
 
@@ -20,6 +27,7 @@ public:
     struct Events {
         std::vector<shared::EntityId> spawned;
         std::vector<shared::EntityId> despawned;
+        std::vector<shared::AttackEventInfo> attacks;
     };
 
     template <std::derived_from<shared::Entity> T, typename... Args>
@@ -54,10 +62,23 @@ public:
     void update(float dt);
 
     [[nodiscard]] Events drainEvents();
+    [[nodiscard]] const std::vector<shared::AttackEventInfo>& pendingAttacks() const noexcept { return events_.attacks; }
+    [[nodiscard]] std::vector<shared::ActiveAttack> pendingActiveAttacks() const;
 
     [[nodiscard]] const shared::EntityRegistry& entities() const noexcept { return registry_; }
+    [[nodiscard]] const shared::WorldMap& worldMap() const noexcept { return worldMap_; }
+#ifdef ENABLE_DEBUG_DRAW
+    [[nodiscard]] const FlowFieldManager& flowFields() const noexcept { return flowFields_; }
+    [[nodiscard]] const OccupancyMap& occupancy() const noexcept { return occupancy_; }
+#endif
+    [[nodiscard]] CameraWrapper& camera() noexcept { return cam_; }
+    [[nodiscard]] const CameraWrapper& camera() const noexcept { return cam_; }
+    void setMap(const std::filesystem::path& mapPath = "assets/test_map.json");
 
 private:
+    // Despawns every agent at 0 health. Runs after all actions, so same-tick hits all land.
+    void despawnDead();
+
     struct Possession {
         shared::Agent* pawn;
         std::unique_ptr<shared::IController> controller;
@@ -67,6 +88,14 @@ private:
     std::unordered_map<shared::EntityId, Possession> possessions_;
     shared::EntityId nextId_{1};
     Events events_;
+    // Reused every tick so update() doesn't allocate once its capacity has grown.
+    std::vector<std::pair<shared::Agent*, shared::Intent>> decisions_;
+    shared::WorldMap worldMap_{};
+    shared::MapView mapView_{worldMap_};
+    CameraWrapper cam_;
+    CollisionQuery colQuery_;
+    OccupancyMap occupancy_;
+    FlowFieldManager flowFields_;
 };
 
 }
