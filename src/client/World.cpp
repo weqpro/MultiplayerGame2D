@@ -49,7 +49,10 @@ void World::apply(const shared::SnapshotMessage& message) {
     }
     lastTick_ = message.tick;
     for (const shared::EntityState& state : message.entities) {
-        if (shared::Entity* entity = registry_.find(state.id)) {
+        if (auto* player = registry_.find<shared::Player>(state.id)) {
+            player->savePrevPos();
+            player->setBody(state.body);
+        } else if (auto* entity = registry_.find(state.id)) {
             entity->setBody(state.body);
         }
     }

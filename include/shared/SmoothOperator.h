@@ -1,12 +1,11 @@
-#ifndef SHARED_CAMERA_CONTROLLER_H
-#define SHARED_CAMERA_CONTROLLER_H
+#ifndef SHARED_SMOOTH_OPERATOR_H
+#define SHARED_SMOOTH_OPERATOR_H
 
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
 
-//TODO: make child of IController?
-class CameraController {
+class SmoothOperator {
 public:
     Rectangle bounds{};
     Vector2   deadHalf{60, 40};
@@ -57,7 +56,7 @@ private:
 
 struct CameraWrapper {
     Camera2D camera{.offset = {0, 0}, .target = {0, 0}, .rotation = 0.0f, .zoom = 4.0f};
-    CameraController camCtrl;
+    SmoothOperator camCtrl;
 };
 
 #endif

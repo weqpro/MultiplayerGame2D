@@ -18,7 +18,7 @@
 #include "shared/Protocol.h"
 #include "shared/types/ActiveAttack.h"
 #include "shared/types/Ids.h"
-#include "shared/controllers/CameraController.h"
+#include "shared/SmoothOperator.h"
 
 namespace server {
 

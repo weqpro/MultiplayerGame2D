@@ -27,6 +27,7 @@ public:
 
     [[nodiscard]] const std::string& username() const noexcept { return username_; }
     [[nodiscard]] Vector2 prevPos() const noexcept { return prevPos_; }
+    void savePrevPos() noexcept { prevPos_ = body().pos; }
 
 private:
     void doAct(const Controls& controls, const server::CollisionQuery& colQuery, WorldView& ctx) override {

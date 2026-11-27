@@ -9,7 +9,7 @@
 
 #include "shared/WorldMap.h"
 #include "shared/Protocol.h"
-#include "shared/controllers/CameraController.h"
+#include "shared/SmoothOperator.h"
 #include "shared/controllers/KeyboardController.h"
 #include "shared/entities/EntityRegistry.h"
 #include "shared/types/ActiveAttack.h"

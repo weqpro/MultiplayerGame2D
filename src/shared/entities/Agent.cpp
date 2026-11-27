@@ -8,6 +8,7 @@
 
 #include "shared/Protocol.h"
 #include "shared/entities/EntityRegistry.h"
+#include "shared/types/EntityKind.h"
 
 namespace shared {
 namespace {
@@ -52,8 +53,16 @@ void Agent::resolve(const MeleeAction& action, WorldView& ctx) {
     const Vector2 origin = body().pos;
     const Vector2 facing = Vector2Normalize(action.dir);
     for (const Agent& target : ctx.world.all<Agent>()) {
-        if (target.id() == id() || target.kind() == kind() || !inReach(target)) {
-            continue;
+        switch (kind()) {
+            case EntityKind::PLAYER:
+                if (target.id() == id() || !inReach(target)) {
+                    continue;
+                }
+                break;
+            default:
+                if (target.id() == id() || target.kind() == kind() || !inReach(target)) {
+                    continue;
+                }
         }
         const Vector2 toTarget = Vector2Normalize(Vector2Subtract(target.body().pos, origin));
         if (Vector2DotProduct(facing, toTarget) < MELEE_ARC_COS) {
